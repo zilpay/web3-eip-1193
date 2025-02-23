@@ -3,8 +3,8 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "dev": "bun build ./index.ts --outdir ./dist --target browser && bun run test/server.ts",
-    "build": "bun build index.ts --outdir dist --target browser --minify --sourcemap=none"
+    "dev": "bun build ./index.ts --outdir ./dist --target browser --format iife --no-minify && bun run test/server.ts",
+    "build": "bun build index.ts --outdir ./dist --target browser --minify --sourcemap=none --format iife"
   },
   "devDependencies": {
     "@types/bun": "latest"

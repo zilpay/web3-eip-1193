@@ -1,11 +1,14 @@
 import type { RequestPayload, ZilPayProvider } from './types';
 
-class ZilPayProviderImpl implements ZilPayProvider {
+export class ZilPayProviderImpl implements ZilPayProvider {
   readonly isZilPay: boolean = true;
   #eventListeners: Map<string, Set<(...args: any[]) => void>> = new Map();
 
   constructor() {
     this.#initializeEvents();
+    if (typeof window !== 'undefined' && window) {
+      window.addEventListener('message', this._handleFlutterEvents.bind(this));
+    }
   }
 
   #initializeEvents() {
@@ -25,7 +28,9 @@ class ZilPayProviderImpl implements ZilPayProvider {
         payload
       };
 
-      window.postMessage(message, '*');
+      if (typeof window !== 'undefined' && window) {
+        window.postMessage(message, '*');
+      }
 
       const handler = (event: MessageEvent) => {
         if (event.data.type === 'ZILPAY_RESPONSE' && event.data.requestId === requestId) {
@@ -34,11 +39,15 @@ class ZilPayProviderImpl implements ZilPayProvider {
           } else {
             resolve(event.data.result);
           }
-          window.removeEventListener('message', handler);
+          if (typeof window !== 'undefined' && window) {
+            window.removeEventListener('message', handler);
+          }
         }
       };
 
-      window.addEventListener('message', handler);
+      if (typeof window !== 'undefined' && window) {
+        window.addEventListener('message', handler);
+      }
     });
   }
 
@@ -60,7 +69,7 @@ class ZilPayProviderImpl implements ZilPayProvider {
     }
   }
 
-  #handleFlutterEvents(event: MessageEvent) {
+  _handleFlutterEvents(event: MessageEvent) {
     if (event.data.type === 'ZILPAY_EVENT') {
       const listeners = this.#eventListeners.get(event.data.event);
       if (listeners) {
@@ -68,22 +77,4 @@ class ZilPayProviderImpl implements ZilPayProvider {
       }
     }
   }
-
-  static inject() {
-    const provider = new ZilPayProviderImpl();
-    window.addEventListener('message', provider.#handleFlutterEvents.bind(provider));
-
-    if (!window.zilPay) {
-      Object.defineProperty(window, 'zilPay', {
-        value: provider,
-        writable: false
-      });
-    }
-
-    window.dispatchEvent(new Event('zilPay#initialized'));
-  }
 }
-
-ZilPayProviderImpl.inject();
-
-export default ZilPayProviderImpl;
