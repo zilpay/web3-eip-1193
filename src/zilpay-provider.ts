@@ -6,9 +6,7 @@ export class ZilPayProviderImpl implements ZilPayProvider {
 
   constructor() {
     this.#initializeEvents();
-    if (typeof window !== 'undefined' && window) {
-      window.addEventListener('message', this._handleFlutterEvents.bind(this));
-    }
+    this.#setupFlutterEventHandler();
   }
 
   #initializeEvents() {
@@ -19,34 +17,56 @@ export class ZilPayProviderImpl implements ZilPayProvider {
     this.#eventListeners.set('message', new Set());
   }
 
+  #setupFlutterEventHandler() {
+    if (typeof window !== 'undefined' && window) {
+      (window as any).handleZilPayEvent = (eventData: any) => {
+        const listeners = this.#eventListeners.get(eventData.event);
+        if (listeners) {
+          listeners.forEach(callback => callback(eventData.data));
+        }
+      };
+    }
+  }
+
   async request(payload: RequestPayload): Promise<any> {
     return new Promise((resolve, reject) => {
-      const requestId = Math.random().toString(36).substring(2);
+      const uuid = Math.random().toString(36).substring(2);
       const message = {
         type: 'ZILPAY_REQUEST',
-        requestId,
-        payload
+        uuid,
+        payload,
       };
 
-      if (typeof window !== 'undefined' && window) {
-        window.postMessage(message, '*');
+      if (typeof window !== 'undefined' && window && (window as any).FlutterWebView) {
+        try {
+          (window as any).FlutterWebView.postMessage(JSON.stringify(message));
+        } catch (e) {
+          reject(new Error(`Failed to send request: ${e}`));
+          return;
+        }
+      } else {
+        reject(new Error('FlutterWebView channel is not available'));
+        return;
       }
 
-      const handler = (event: MessageEvent) => {
-        if (event.data.type === 'ZILPAY_RESPONSE' && event.data.requestId === requestId) {
-          if (event.data.error) {
-            reject(new Error(event.data.error));
+      const responseHandler = (eventData: any) => {
+        if (
+          eventData.type === 'ZILPAY_RESPONSE' &&
+          eventData.uuid === uuid
+        ) {
+          if (eventData.error) {
+            reject(new Error(eventData.error));
           } else {
-            resolve(event.data.result);
+            resolve(eventData.result);
           }
           if (typeof window !== 'undefined' && window) {
-            window.removeEventListener('message', handler);
+            window.removeEventListener('message', responseHandler as any);
           }
         }
       };
 
       if (typeof window !== 'undefined' && window) {
-        window.addEventListener('message', handler);
+        window.addEventListener('message', responseHandler as any);
       }
     });
   }
@@ -66,15 +86,6 @@ export class ZilPayProviderImpl implements ZilPayProvider {
     const listeners = this.#eventListeners.get(event);
     if (listeners) {
       listeners.delete(callback);
-    }
-  }
-
-  _handleFlutterEvents(event: MessageEvent) {
-    if (event.data.type === 'ZILPAY_EVENT') {
-      const listeners = this.#eventListeners.get(event.data.event);
-      if (listeners) {
-        listeners.forEach(callback => callback(event.data.data));
-      }
     }
   }
 }

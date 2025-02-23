@@ -21,7 +21,7 @@ export * from './src/zilpay-provider';
       Object.defineProperty(window, 'zilPay', {
         value: provider,
         writable: false,
-        configurable: true
+        configurable: true,
       });
     } catch (defineError) {
       (window as any).zilPay = provider;
@@ -30,7 +30,6 @@ export * from './src/zilpay-provider';
 
     window.dispatchEvent(new Event('zilPay#initialized'));
     console.log('ZilPay provider injected successfully');
-    
   } catch (error) {
     console.error('Failed to inject ZilPay provider:', error);
   }
