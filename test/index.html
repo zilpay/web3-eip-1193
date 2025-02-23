@@ -1,0 +1,115 @@
+
+<!-- test/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>ZilPay Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            overscroll-behavior: none;
+        }
+        .container {
+            width: 100%;
+            max-width: 480px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            width: 100%;
+            padding: 15px;
+            background-color: white;
+            border-radius: 5px;
+            margin-top: 20px;
+            word-break: break-word;
+        }
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            button {
+                padding: 12px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ZilPay Test</h1>
+        <button onclick="connectWallet()">Connect Wallet</button>
+        <button onclick="getAccounts()">Get Accounts</button>
+        <button onclick="signMessage()">Sign Message</button>
+        <div id="result">Result will appear here</div>
+    </div>
+
+    <script src="../dist/index.js"></script>
+    <script>
+        const resultDiv = document.getElementById('result');
+
+        async function connectWallet() {
+            try {
+                if (window.zilPay) {
+                    const accounts = await window.zilPay.request({ method: 'requestAccounts' });
+                    resultDiv.textContent = 'Connected: ' + JSON.stringify(accounts);
+                } else {
+                    resultDiv.textContent = 'ZilPay not found';
+                }
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function getAccounts() {
+            try {
+                if (window.zilPay) {
+                    const accounts = await window.zilPay.request({ method: 'getAccounts' });
+                    resultDiv.textContent = 'Accounts: ' + JSON.stringify(accounts);
+                }
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + error.message;
+            }
+        }
+
+        async function signMessage() {
+            try {
+                if (window.zilPay) {
+                    const signature = await window.zilPay.request({ 
+                        method: 'signMessage',
+                        params: ['Hello, ZilPay!']
+                    });
+                    resultDiv.textContent = 'Signature: ' + signature;
+                }
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
