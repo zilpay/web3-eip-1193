@@ -1,3 +1,2 @@
-import './src';
-
-console.log("Hello via Bun!");
+export * from './src/types';
+export * from './src/zilpay-provider';

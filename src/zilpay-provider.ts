@@ -1,0 +1,89 @@
+import type { RequestPayload, ZilPayProvider } from './types';
+
+class ZilPayProviderImpl implements ZilPayProvider {
+  readonly isZilPay: boolean = true;
+  #eventListeners: Map<string, Set<(...args: any[]) => void>> = new Map();
+
+  constructor() {
+    this.#initializeEvents();
+  }
+
+  #initializeEvents() {
+    this.#eventListeners.set('connect', new Set());
+    this.#eventListeners.set('disconnect', new Set());
+    this.#eventListeners.set('chainChanged', new Set());
+    this.#eventListeners.set('accountsChanged', new Set());
+    this.#eventListeners.set('message', new Set());
+  }
+
+  async request(payload: RequestPayload): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const requestId = Math.random().toString(36).substring(2);
+      const message = {
+        type: 'ZILPAY_REQUEST',
+        requestId,
+        payload
+      };
+
+      window.postMessage(message, '*');
+
+      const handler = (event: MessageEvent) => {
+        if (event.data.type === 'ZILPAY_RESPONSE' && event.data.requestId === requestId) {
+          if (event.data.error) {
+            reject(new Error(event.data.error));
+          } else {
+            resolve(event.data.result);
+          }
+          window.removeEventListener('message', handler);
+        }
+      };
+
+      window.addEventListener('message', handler);
+    });
+  }
+
+  async enable(): Promise<string[]> {
+    return this.request({ method: 'requestAccounts' });
+  }
+
+  on(event: string, callback: (...args: any[]) => void): void {
+    const listeners = this.#eventListeners.get(event);
+    if (listeners) {
+      listeners.add(callback);
+    }
+  }
+
+  removeListener(event: string, callback: (...args: any[]) => void): void {
+    const listeners = this.#eventListeners.get(event);
+    if (listeners) {
+      listeners.delete(callback);
+    }
+  }
+
+  #handleFlutterEvents(event: MessageEvent) {
+    if (event.data.type === 'ZILPAY_EVENT') {
+      const listeners = this.#eventListeners.get(event.data.event);
+      if (listeners) {
+        listeners.forEach(callback => callback(event.data.data));
+      }
+    }
+  }
+
+  static inject() {
+    const provider = new ZilPayProviderImpl();
+    window.addEventListener('message', provider.#handleFlutterEvents.bind(provider));
+
+    if (!window.zilPay) {
+      Object.defineProperty(window, 'zilPay', {
+        value: provider,
+        writable: false
+      });
+    }
+
+    window.dispatchEvent(new Event('zilPay#initialized'));
+  }
+}
+
+ZilPayProviderImpl.inject();
+
+export default ZilPayProviderImpl;
