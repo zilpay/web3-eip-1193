@@ -1,3 +1,4 @@
+import { getFavicon } from './favicon';
 import type { ProviderRpcError, RequestPayload, ZilPayProvider, ProviderConnectInfo, ProviderMessage, ZilPayEventData, ZilPayResponseData } from './types';
 
 export class ZilPayProviderImpl implements ZilPayProvider {
@@ -78,12 +79,15 @@ export class ZilPayProviderImpl implements ZilPayProvider {
       } as ProviderRpcError);
     }
 
+    const icon = getFavicon();
+
     return new Promise((resolve, reject) => {
       const uuid = Math.random().toString(36).substring(2);
       const message = {
         type: 'ZILPAY_REQUEST',
         uuid,
         payload,
+        icon,
       };
 
       if (typeof window === 'undefined' || !window || !(window as any).FlutterWebView) {
