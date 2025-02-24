@@ -1,4 +1,5 @@
 import { getFavicon } from './favicon';
+import { getMetaDataFromTags } from './meta';
 import type { ProviderRpcError, RequestPayload, ZilPayProvider, ProviderConnectInfo, ProviderMessage, ZilPayEventData, ZilPayResponseData } from './types';
 
 export class ZilPayProviderImpl implements ZilPayProvider {
@@ -83,11 +84,13 @@ export class ZilPayProviderImpl implements ZilPayProvider {
 
     return new Promise((resolve, reject) => {
       const uuid = Math.random().toString(36).substring(2);
+      const meta = getMetaDataFromTags();
       const message = {
         type: 'ZILPAY_REQUEST',
         uuid,
         payload,
         icon,
+        ...meta,
       };
 
       if (typeof window === 'undefined' || !window || !(window as any).FlutterWebView) {

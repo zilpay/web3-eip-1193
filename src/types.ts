@@ -55,3 +55,14 @@ export interface ZilPayResponseData {
     result: unknown
   };
 }
+
+export interface MetaData {
+  description: string | null;
+  title: string | null;
+  colors: {
+    primary?: string;
+    secondary?: string;
+    background?: string;
+    text?: string;
+  } | null;
+}

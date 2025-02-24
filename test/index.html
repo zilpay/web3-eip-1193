@@ -7,7 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>MetaMask Test</title>
+    <meta name="description" content="Test description for ZilPay">
+    <meta name="title" content="ZilPay MetaMask Test">
+    <meta name="colors" content='{"primary": "#007bff", "secondary": "#0056b3", "background": "#f0f0f0", "text": "#000000"}'>
     <style>
         body {
             margin: 0;
@@ -66,6 +68,7 @@
         <button onclick="connectWallet()">Connect Wallet</button>
         <button onclick="getAccounts()">Get Accounts</button>
         <button onclick="signMessage()">Sign Message</button>
+        <button onclick="checkMetaTags()">Check Meta Tags</button>
         <div id="result">Result will appear here</div>
     </div>
 
@@ -78,10 +81,10 @@
                     const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                     resultDiv.textContent = 'Connected: ' + JSON.stringify(accounts);
                 } else {
-                    resultDiv.textContent = 'MetaMask не найден';
+                    resultDiv.textContent = 'MetaMask not found';
                 }
             } catch (error) {
-                resultDiv.textContent = 'Ошибка: ' + error.message;
+                resultDiv.textContent = 'Error: ' + error.message;
             }
         }
 
@@ -89,12 +92,12 @@
             try {
                 if (window.ethereum) {
                     const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-                    resultDiv.textContent = 'Аккаунты: ' + JSON.stringify(accounts);
+                    resultDiv.textContent = 'Accounts: ' + JSON.stringify(accounts);
                 } else {
-                    resultDiv.textContent = 'MetaMask не найден';
+                    resultDiv.textContent = 'MetaMask not found';
                 }
             } catch (error) {
-                resultDiv.textContent = 'Ошибка: ' + error.message;
+                resultDiv.textContent = 'Error: ' + error.message;
             }
         }
 
@@ -103,7 +106,7 @@
                 if (window.ethereum) {
                     const accounts = await window.ethereum.request({ method: 'eth_accounts' });
                     if (accounts.length === 0) {
-                        resultDiv.textContent = 'Аккаунты не найдены. Подключите MetaMask.';
+                        resultDiv.textContent = 'No accounts found. Connect MetaMask.';
                         return;
                     }
                     const account = accounts[0];
@@ -112,13 +115,52 @@
                         method: 'personal_sign',
                         params: [message, account]
                     });
-                    resultDiv.textContent = 'Подпись: ' + signature;
+                    resultDiv.textContent = 'Signature: ' + signature;
                 } else {
-                    resultDiv.textContent = 'MetaMask не найден';
+                    resultDiv.textContent = 'MetaMask not found';
                 }
             } catch (error) {
-                resultDiv.textContent = 'Ошибка: ' + error.message;
+                resultDiv.textContent = 'Error: ' + error.message;
             }
+        }
+
+        function checkMetaTags() {
+            const metaTags = document.getElementsByTagName('meta');
+            let description = null;
+            let title = null;
+            let colors = null;
+
+            for (let i = 0; i < metaTags.length; i++) {
+                const meta = metaTags[i];
+                const name = meta.getAttribute('name');
+                const content = meta.getAttribute('content');
+
+                if (!name || !content) continue;
+
+                switch (name.toLowerCase()) {
+                    case 'description':
+                        description = content;
+                        break;
+                    case 'title':
+                        title = content;
+                        break;
+                    case 'colors':
+                        try {
+                            colors = JSON.parse(content);
+                        } catch (e) {
+                            console.warn('Failed to parse colors: ' + e);
+                            colors = null;
+                        }
+                        break;
+                }
+            }
+
+            const result = {
+                description: description,
+                title: title,
+                colors: colors
+            };
+            resultDiv.textContent = 'Meta Tags: ' + JSON.stringify(result, null, 2);
         }
     </script>
 </body>
