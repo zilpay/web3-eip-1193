@@ -88,7 +88,7 @@ export class ZilPayProviderImpl implements ZilPayProvider {
 
       if (typeof window === 'undefined' || !window || !(window as any).FlutterWebView) {
         reject({
-          message: 'FlutterWebView channel is not available',
+          message: 'ZilPay channel is not available',
           code: 4900,
           data: null,
         } as ProviderRpcError);
@@ -106,16 +106,18 @@ export class ZilPayProviderImpl implements ZilPayProvider {
         return;
       }
 
-      const responseHandler = (eventData: ZilPayResponseData) => {
+      const responseHandler = (event: MessageEvent) => {
+        let eventData: ZilPayResponseData = event.data;
+
         if (eventData.type === 'ZILPAY_RESPONSE' && eventData.uuid === uuid) {
-          if (eventData.error) {
+          if (eventData.payload.error) {
             reject({
-              message: eventData.error,
-              code: eventData.code || 4000,
-              data: eventData.data,
+              message: eventData.payload.error.message,
+              code: eventData.payload.error.code || 4000,
+              data: eventData.payload.error.data,
             } as ProviderRpcError);
           } else {
-            resolve(eventData.result);
+            resolve(eventData.payload.result);
           }
           window.removeEventListener('message', responseHandler);
         }

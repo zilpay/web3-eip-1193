@@ -4,7 +4,6 @@ export interface RequestPayload {
 }
 
 export interface ProviderRpcError extends Error {
-  name: string;
   message: string;
   code: number;
   data?: any;
@@ -48,11 +47,11 @@ export interface ZilPayEventData {
   data: ProviderConnectInfo | ProviderRpcError | string | string[] | ProviderMessage;
 }
 
-export interface ZilPayResponseData  {
+export interface ZilPayResponseData {
   type: string;
   uuid: string;
-  error?: string;
-  code?: number;
-  data?: any;
-  result?: any;
+  payload: {
+    error?: ProviderRpcError;
+    result: unknown
+  };
 }
