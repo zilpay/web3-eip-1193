@@ -10,27 +10,27 @@ export * from './src/zilpay-provider';
   }
 
   try {
-    if ('zilPay' in window && window.zilPay) {
-      console.warn('ZilPay provider already exists in window');
+    if ('ethereum' in window && window.ethereum) {
+      console.warn('Ethereum provider already exists in window');
       return;
     }
 
     const provider = new ZilPayProviderImpl();
 
     try {
-      Object.defineProperty(window, 'zilPay', {
+      Object.defineProperty(window, 'ethereum', {
         value: provider,
         writable: false,
         configurable: true,
       });
     } catch (defineError) {
-      (window as any).zilPay = provider;
-      console.warn('Using fallback assignment for zilPay due to:', defineError);
+      (window as any).ethereum = provider;
+      console.warn('Using fallback assignment for ethereum due to:', defineError);
     }
 
-    window.dispatchEvent(new Event('zilPay#initialized'));
-    console.log('ZilPay provider injected successfully');
+    window.dispatchEvent(new Event('ethereum#initialized'));
+    console.log('Ethereum provider injected successfully');
   } catch (error) {
-    console.error('Failed to inject ZilPay provider:', error);
+    console.error('Failed to inject Ethereum provider:', error);
   }
 })();
