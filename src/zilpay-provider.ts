@@ -7,7 +7,6 @@ export class ZilPayProviderImpl implements ZilPayProvider {
   readonly supportedMethods: Set<string> = new Set([
     'eth_requestAccounts',
     'eth_accounts', 
-    'eth_sign', 
     'eth_sendTransaction',
     'eth_getBalance',
     'eth_getTransactionByHash',

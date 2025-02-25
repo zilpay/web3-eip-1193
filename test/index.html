@@ -14,7 +14,7 @@
         body {
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -27,6 +27,10 @@
             max-width: 480px;
             padding: 20px;
             box-sizing: border-box;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            margin: 20px 0;
         }
         button {
             width: 100%;
@@ -39,19 +43,29 @@
             font-size: 16px;
             cursor: pointer;
             touch-action: manipulation;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s ease, transform 0.2s ease;
         }
         button:hover {
             background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+        h1 {
+            font-size: 24px;
+            color: #333;
+            text-align: center;
         }
         h2 {
             margin-top: 30px;
             border-bottom: 1px solid #ddd;
             padding-bottom: 10px;
+            font-size: 20px;
+            color: #444;
         }
         #result {
             width: 100%;
             padding: 15px;
-            background-color: white;
+            background-color: #f9f9f9;
             border-radius: 5px;
             margin-top: 20px;
             word-break: break-word;
@@ -59,6 +73,7 @@
             min-height: 100px;
             max-height: 300px;
             overflow-y: auto;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
         }
         .buttonGroup {
             margin-bottom: 20px;
@@ -66,10 +81,17 @@
         @media (max-width: 480px) {
             .container {
                 padding: 10px;
+                margin: 10px;
             }
             button {
                 padding: 12px;
                 font-size: 14px;
+            }
+            h1 {
+                font-size: 20px;
+            }
+            h2 {
+                font-size: 18px;
             }
         }
     </style>
@@ -94,6 +116,7 @@
             <button onclick="getChainId()">eth_chainId</button>
             <button onclick="estimateGas()">eth_estimateGas</button>
             <button onclick="getGasPrice()">eth_gasPrice</button>
+            <button onclick="signTransaction()">eth_sign</button> <!-- Новый метод -->
             <button onclick="sendTransaction()">eth_sendTransaction</button>
             <button onclick="signTypedData()">eth_signTypedData_v4</button>
             <button onclick="getTransactionCount()">eth_getTransactionCount</button>
@@ -348,6 +371,26 @@
             }
         }
 
+        async function signTransaction() {
+            try {
+                if (!await checkMetaMask()) return;
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length === 0) {
+                    displayResult('Error', 'No accounts found. Connect MetaMask first.');
+                    return;
+                }
+                const account = accounts[0];
+                const message = '0x48656c6c6f2c204d6574614d61736b21'; // "Hello, MetaMask!" в hex
+                const signature = await window.ethereum.request({
+                    method: 'eth_sign',
+                    params: [account, message]
+                });
+                displayResult('Signature', signature);
+            } catch (error) {
+                handleError('signTransaction', error);
+            }
+        }
+
         async function sendTransaction() {
             try {
                 if (!await checkMetaMask()) return;
@@ -591,9 +634,6 @@
                     return;
                 }
                 
-                // Этот шаг требует предварительно зашифрованного сообщения
-                // Обычно вы бы использовали публичный ключ из eth_getEncryptionPublicKey
-                // и библиотеку вроде eth-sig-util для шифрования сообщения
                 const encryptedMessage = '0x7b2276657273696f6e223a227832353531392d7873616c736132302d706f6c7931333035222c226e6f6e6365223a22554335577a336f55334e71337646704c6c7463574d46596a764c534e43447158222c22657068656d5075626c69634b6579223a225249394579764d38346650644c594d326e7342654552566b47714b6f55533359536b46366f62466f757638383d222c2263697068657274657874223a22483032386a6f7663552f56484c507a414d6a77582b445a55326e5879414b574958347971435a4a4d3d227d';
                 
                 try {
@@ -603,7 +643,7 @@
                     });
                     displayResult('Decrypted Message', decrypted);
                 } catch (e) {
-                    displayResult('Decrypt Error', 'Для тестирования eth_decrypt требуется предварительно зашифрованное сообщение. Этот пример использует тестовое сообщение, которое может быть недействительным.');
+                    displayResult('Decrypt Error', 'Для тестирования eth_decrypt требуется предварительно зашифрованное сообщение.');
                 }
             } catch (error) {
                 handleError('decrypt', error);
