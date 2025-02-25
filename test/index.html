@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>ZilPay | Web3 Test DApp</title>
+    <title>ZilPay | Introduce</title>
     <link rel="icon" type="image/x-icon" href="https://zilpay.io/favicon/favicon.ico">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="description" content="Test description for ZilPay Web3 DApp">
-    <meta name="title" content="ZilPay Web3 Test DApp">
+    <meta name="description" content="Test description for ZilPay">
+    <meta name="title" content="ZilPay MetaMask Test">
     <meta name="colors" content='{"primary": "#007bff", "secondary": "#0056b3", "background": "#f0f0f0", "text": "#000000"}'>
     <style>
         body {
@@ -43,6 +43,11 @@
         button:hover {
             background-color: #0056b3;
         }
+        h2 {
+            margin-top: 30px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
         #result {
             width: 100%;
             padding: 15px;
@@ -51,6 +56,12 @@
             margin-top: 20px;
             word-break: break-word;
             white-space: pre-wrap;
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .buttonGroup {
+            margin-bottom: 20px;
         }
         @media (max-width: 480px) {
             .container {
@@ -65,247 +76,111 @@
 </head>
 <body>
     <div class="container">
-        <h1>Web3 Test DApp</h1>
-        <button onclick="requestAccounts()">eth_requestAccounts</button>
-        <button onclick="getAccounts()">eth_accounts</button>
-        <button onclick="signMessage()">eth_sign</button>
-        <button onclick="sendTransaction()">eth_sendTransaction</button>
-        <button onclick="getBalance()">eth_getBalance</button>
-        <button onclick="getTransactionByHash()">eth_getTransactionByHash</button>
-        <button onclick="getTransactionReceipt()">eth_getTransactionReceipt</button>
-        <button onclick="callContract()">eth_call</button>
-        <button onclick="estimateGas()">eth_estimateGas</button>
-        <button onclick="getBlockNumber()">eth_blockNumber</button>
-        <button onclick="getBlockByNumber()">eth_getBlockByNumber</button>
-        <button onclick="getBlockByHash()">eth_getBlockByHash</button>
-        <button onclick="subscribe()">eth_subscribe</button>
-        <button onclick="unsubscribe()">eth_unsubscribe</button>
-        <button onclick="getNetVersion()">net_version</button>
-        <button onclick="getChainId()">eth_chainId</button>
-        <button onclick="getCode()">eth_getCode</button>
-        <button onclick="getStorageAt()">eth_getStorageAt</button>
-        <button onclick="checkMetaTags()">Check Meta Tags</button>
-        <div id="result">Result will appear here</div>
+        <h1>MetaMask Test</h1>
+        
+        <h2>Базовые методы</h2>
+        <div class="buttonGroup">
+            <button onclick="connectWallet()">Connect Wallet</button>
+            <button onclick="getAccounts()">Get Accounts</button>
+            <button onclick="signMessage()">Sign Message</button>
+            <button onclick="checkMetaTags()">Check Meta Tags</button>
+        </div>
+
+        <h2>Стандартные методы JSON-RPC</h2>
+        <div class="buttonGroup">
+            <button onclick="getBalance()">eth_getBalance</button>
+            <button onclick="getBlockNumber()">eth_blockNumber</button>
+            <button onclick="getNetwork()">net_version</button>
+            <button onclick="getChainId()">eth_chainId</button>
+            <button onclick="estimateGas()">eth_estimateGas</button>
+            <button onclick="getGasPrice()">eth_gasPrice</button>
+            <button onclick="sendTransaction()">eth_sendTransaction</button>
+            <button onclick="signTypedData()">eth_signTypedData_v4</button>
+            <button onclick="getTransactionCount()">eth_getTransactionCount</button>
+            <button onclick="getBlockByNumber()">eth_getBlockByNumber</button>
+        </div>
+
+        <h2>Дополнительные методы MetaMask</h2>
+        <div class="buttonGroup">
+            <button onclick="addNetwork()">wallet_addEthereumChain</button>
+            <button onclick="switchNetwork()">wallet_switchEthereumChain</button>
+            <button onclick="watchAsset()">wallet_watchAsset</button>
+            <button onclick="getPermissions()">wallet_getPermissions</button>
+            <button onclick="requestPermissions()">wallet_requestPermissions</button>
+            <button onclick="scanQRCode()">wallet_scanQRCode</button>
+            <button onclick="getEncryptionPublicKey()">eth_getEncryptionPublicKey</button>
+            <button onclick="decrypt()">eth_decrypt</button>
+        </div>
+
+        <div id="result">Результат появится здесь</div>
     </div>
 
     <script>
         const resultDiv = document.getElementById('result');
-        const provider = window.ethereum || window.zilPay;
 
-        async function requestAccounts() {
+        function displayResult(title, data) {
             try {
-                const accounts = await provider.request({ method: 'eth_requestAccounts' });
-                resultDiv.textContent = JSON.stringify(accounts, null, 2);
+                if (typeof data === 'object') {
+                    resultDiv.textContent = `${title}:\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.textContent = `${title}: ${data}`;
+                }
             } catch (error) {
-                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
+                resultDiv.textContent = `${title}: ${data}`;
+            }
+        }
+
+        function handleError(method, error) {
+            resultDiv.textContent = `Error (${method}): ${error.message || error}`;
+            console.error(error);
+        }
+
+        async function checkMetaMask() {
+            if (!window.ethereum) {
+                displayResult('Error', 'MetaMask not found');
+                return false;
+            }
+            return true;
+        }
+
+        // Базовые методы
+        async function connectWallet() {
+            try {
+                if (!await checkMetaMask()) return;
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                displayResult('Connected Accounts', accounts);
+            } catch (error) {
+                handleError('connectWallet', error);
             }
         }
 
         async function getAccounts() {
             try {
-                const accounts = await provider.request({ method: 'eth_accounts' });
-                resultDiv.textContent = JSON.stringify(accounts, null, 2);
+                if (!await checkMetaMask()) return;
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                displayResult('Accounts', accounts);
             } catch (error) {
-                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
+                handleError('getAccounts', error);
             }
         }
 
         async function signMessage() {
             try {
-                const accounts = await provider.request({ method: 'eth_accounts' });
-                if (!accounts.length) throw new Error('No accounts connected');
-                const signature = await provider.request({
-                    method: 'eth_sign',
-                    params: [accounts[0], '0x48656c6c6f20576f726c64'] // "Hello World"
+                if (!await checkMetaMask()) return;
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length === 0) {
+                    displayResult('Error', 'No accounts found. Connect MetaMask first.');
+                    return;
+                }
+                const account = accounts[0];
+                const message = 'Hello, MetaMask!';
+                const signature = await window.ethereum.request({
+                    method: 'personal_sign',
+                    params: [message, account]
                 });
-                resultDiv.textContent = signature;
+                displayResult('Signature', signature);
             } catch (error) {
-                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
-            }
-        }
-
-        async function sendTransaction() {
-            try {
-                const accounts = await provider.request({ method: 'eth_accounts' });
-                if (!accounts.length) throw new Error('No accounts connected');
-                const txHash = await provider.request({
-                    method: 'eth_sendTransaction',
-                    params: [{
-                        from: accounts[0],
-                        to: '0x1234567890123456789012345678901234567890',
-                        value: '0x1'
-                    }]
-                });
-                resultDiv.textContent = txHash;
-            } catch (error) {
-                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
-            }
-        }
-
-        async function getBalance() {
-            try {
-                const accounts = await provider.request({ method: 'eth_accounts' });
-                if (!accounts.length) throw new Error('No accounts connected');
-                const balance = await provider.request({
-                    method: 'eth_getBalance',
-                    params: [accounts[0], 'latest']
-                });
-                resultDiv.textContent = balance;
-            } catch (error) {
-                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
-            }
-        }
-
-        async function getTransactionByHash() {
-            try {
-                const tx = await provider.request({
-                    method: 'eth_getTransactionByHash',
-                    params: ['0x0000000000000000000000000000000000000000000000000000000000000000']
-                });
-                resultDiv.textContent = JSON.stringify(tx, null, 2);
-            } catch (error) {
-                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
-            }
-        }
-
-        async function getTransactionReceipt() {
-            try {
-                const receipt = await provider.request({
-                    method: 'eth_getTransactionReceipt',
-                    params: ['0x0000000000000000000000000000000000000000000000000000000000000000']
-                });
-                resultDiv.textContent = JSON.stringify(receipt, null, 2);
-            } catch (error) {
-                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
-            }
-        }
-
-        async function callContract() {
-            try {
-                const result = await provider.request({
-                    method: 'eth_call',
-                    params: [{
-                        to: '0x1234567890123456789012345678901234567890',
-                        data: '0x'
-                    }, 'latest']
-                });
-                resultDiv.textContent = result;
-            } catch (error) {
-                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
-            }
-        }
-
-        async function estimateGas() {
-            try {
-                const gas = await provider.request({
-                    method: 'eth_estimateGas',
-                    params: [{
-                        to: '0x1234567890123456789012345678901234567890',
-                        value: '0x1'
-                    }]
-                });
-                resultDiv.textContent = gas;
-            } catch (error) {
-                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
-            }
-        }
-
-        async function getBlockNumber() {
-            try {
-                const blockNumber = await provider.request({ method: 'eth_blockNumber' });
-                resultDiv.textContent = blockNumber;
-            } catch (error) {
-                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
-            }
-        }
-
-        async function getBlockByNumber() {
-            try {
-                const block = await provider.request({
-                    method: 'eth_getBlockByNumber',
-                    params: ['latest', false]
-                });
-                resultDiv.textContent = JSON.stringify(block, null, 2);
-            } catch (error) {
-                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
-            }
-        }
-
-        async function getBlockByHash() {
-            try {
-                const block = await provider.request({
-                    method: 'eth_getBlockByHash',
-                    params: ['0x0000000000000000000000000000000000000000000000000000000000000000', false]
-                });
-                resultDiv.textContent = JSON.stringify(block, null, 2);
-            } catch (error) {
-                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
-            }
-        }
-
-        async function subscribe() {
-            try {
-                const subscription = await provider.request({
-                    method: 'eth_subscribe',
-                    params: ['newHeads']
-                });
-                resultDiv.textContent = subscription;
-            } catch (error) {
-                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
-            }
-        }
-
-        async function unsubscribe() {
-            try {
-                const result = await provider.request({
-                    method: 'eth_unsubscribe',
-                    params: ['0x123'] // Example subscription ID
-                });
-                resultDiv.textContent = result;
-            } catch (error) {
-                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
-            }
-        }
-
-        async function getNetVersion() {
-            try {
-                const netVersion = await provider.request({ method: 'net_version' });
-                resultDiv.textContent = netVersion;
-            } catch (error) {
-                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
-            }
-        }
-
-        async function getChainId() {
-            try {
-                const chainId = await provider.request({ method: 'eth_chainId' });
-                resultDiv.textContent = chainId;
-            } catch (error) {
-                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
-            }
-        }
-
-        async function getCode() {
-            try {
-                const code = await provider.request({
-                    method: 'eth_getCode',
-                    params: ['0x1234567890123456789012345678901234567890', 'latest']
-                });
-                resultDiv.textContent = code;
-            } catch (error) {
-                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
-            }
-        }
-
-        async function getStorageAt() {
-            try {
-                const storage = await provider.request({
-                    method: 'eth_getStorageAt',
-                    params: ['0x1234567890123456789012345678901234567890', '0x0', 'latest']
-                });
-                resultDiv.textContent = storage;
-            } catch (error) {
-                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
+                handleError('signMessage', error);
             }
         }
 
@@ -340,8 +215,399 @@
                 }
             }
 
-            const result = { description, title, colors };
-            resultDiv.textContent = JSON.stringify(result, null, 2);
+            const result = {
+                description: description,
+                title: title,
+                colors: colors
+            };
+            displayResult('Meta Tags', result);
+        }
+
+        // Стандартные методы JSON-RPC
+        async function getBalance() {
+            try {
+                if (!await checkMetaMask()) return;
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length === 0) {
+                    displayResult('Error', 'No accounts found. Connect MetaMask first.');
+                    return;
+                }
+                const balance = await window.ethereum.request({
+                    method: 'eth_getBalance',
+                    params: [accounts[0], 'latest']
+                });
+                const etherValue = parseInt(balance, 16) / 1e18;
+                displayResult('Account Balance', {
+                    wei: balance,
+                    ether: etherValue.toFixed(6)
+                });
+            } catch (error) {
+                handleError('getBalance', error);
+            }
+        }
+
+        async function getBlockNumber() {
+            try {
+                if (!await checkMetaMask()) return;
+                const blockNumber = await window.ethereum.request({
+                    method: 'eth_blockNumber',
+                    params: []
+                });
+                displayResult('Current Block Number', {
+                    hex: blockNumber,
+                    decimal: parseInt(blockNumber, 16)
+                });
+            } catch (error) {
+                handleError('getBlockNumber', error);
+            }
+        }
+
+        async function getNetwork() {
+            try {
+                if (!await checkMetaMask()) return;
+                const networkId = await window.ethereum.request({
+                    method: 'net_version',
+                    params: []
+                });
+                let networkName = 'Unknown';
+                switch (networkId) {
+                    case '1': networkName = 'Ethereum Mainnet'; break;
+                    case '5': networkName = 'Goerli Testnet'; break;
+                    case '11155111': networkName = 'Sepolia Testnet'; break;
+                    case '137': networkName = 'Polygon Mainnet'; break;
+                    case '80001': networkName = 'Mumbai Testnet'; break;
+                    case '42161': networkName = 'Arbitrum One'; break;
+                    case '10': networkName = 'Optimism'; break;
+                    case '56': networkName = 'BNB Smart Chain'; break;
+                    case '43114': networkName = 'Avalanche C-Chain'; break;
+                }
+                displayResult('Network', {
+                    id: networkId,
+                    name: networkName
+                });
+            } catch (error) {
+                handleError('getNetwork', error);
+            }
+        }
+
+        async function getChainId() {
+            try {
+                if (!await checkMetaMask()) return;
+                const chainId = await window.ethereum.request({
+                    method: 'eth_chainId',
+                    params: []
+                });
+                displayResult('Chain ID', {
+                    hex: chainId,
+                    decimal: parseInt(chainId, 16)
+                });
+            } catch (error) {
+                handleError('getChainId', error);
+            }
+        }
+
+        async function estimateGas() {
+            try {
+                if (!await checkMetaMask()) return;
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length === 0) {
+                    displayResult('Error', 'No accounts found. Connect MetaMask first.');
+                    return;
+                }
+                const gasEstimate = await window.ethereum.request({
+                    method: 'eth_estimateGas',
+                    params: [{
+                        from: accounts[0],
+                        to: accounts[0],
+                        value: '0x0'
+                    }]
+                });
+                displayResult('Gas Estimate', {
+                    hex: gasEstimate,
+                    decimal: parseInt(gasEstimate, 16)
+                });
+            } catch (error) {
+                handleError('estimateGas', error);
+            }
+        }
+
+        async function getGasPrice() {
+            try {
+                if (!await checkMetaMask()) return;
+                const gasPrice = await window.ethereum.request({
+                    method: 'eth_gasPrice',
+                    params: []
+                });
+                const gweiValue = parseInt(gasPrice, 16) / 1e9;
+                displayResult('Gas Price', {
+                    wei: gasPrice,
+                    gwei: gweiValue.toFixed(2)
+                });
+            } catch (error) {
+                handleError('getGasPrice', error);
+            }
+        }
+
+        async function sendTransaction() {
+            try {
+                if (!await checkMetaMask()) return;
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length === 0) {
+                    displayResult('Error', 'No accounts found. Connect MetaMask first.');
+                    return;
+                }
+                const transactionParameters = {
+                    from: accounts[0],
+                    to: accounts[0],
+                    value: '0x0', // 0 ETH
+                    gas: '0x5208', // 21000 gas
+                    data: '0x'
+                };
+                const txHash = await window.ethereum.request({
+                    method: 'eth_sendTransaction',
+                    params: [transactionParameters]
+                });
+                displayResult('Transaction Hash', txHash);
+            } catch (error) {
+                handleError('sendTransaction', error);
+            }
+        }
+
+        async function signTypedData() {
+            try {
+                if (!await checkMetaMask()) return;
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length === 0) {
+                    displayResult('Error', 'No accounts found. Connect MetaMask first.');
+                    return;
+                }
+                const account = accounts[0];
+                
+                const typedData = {
+                    types: {
+                        EIP712Domain: [
+                            { name: 'name', type: 'string' },
+                            { name: 'version', type: 'string' },
+                            { name: 'chainId', type: 'uint256' },
+                            { name: 'verifyingContract', type: 'address' }
+                        ],
+                        Message: [
+                            { name: 'content', type: 'string' }
+                        ]
+                    },
+                    primaryType: 'Message',
+                    domain: {
+                        name: 'ZilPay MetaMask Test',
+                        version: '1',
+                        chainId: await window.ethereum.request({ method: 'eth_chainId' }),
+                        verifyingContract: '0x0000000000000000000000000000000000000000'
+                    },
+                    message: {
+                        content: 'Hello, typed data!'
+                    }
+                };
+                
+                const signature = await window.ethereum.request({
+                    method: 'eth_signTypedData_v4',
+                    params: [account, JSON.stringify(typedData)]
+                });
+                displayResult('Typed Data Signature', signature);
+            } catch (error) {
+                handleError('signTypedData', error);
+            }
+        }
+
+        async function getTransactionCount() {
+            try {
+                if (!await checkMetaMask()) return;
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length === 0) {
+                    displayResult('Error', 'No accounts found. Connect MetaMask first.');
+                    return;
+                }
+                const txCount = await window.ethereum.request({
+                    method: 'eth_getTransactionCount',
+                    params: [accounts[0], 'latest']
+                });
+                displayResult('Transaction Count (Nonce)', {
+                    hex: txCount,
+                    decimal: parseInt(txCount, 16)
+                });
+            } catch (error) {
+                handleError('getTransactionCount', error);
+            }
+        }
+
+        async function getBlockByNumber() {
+            try {
+                if (!await checkMetaMask()) return;
+                const blockNumber = await window.ethereum.request({
+                    method: 'eth_blockNumber',
+                    params: []
+                });
+                const block = await window.ethereum.request({
+                    method: 'eth_getBlockByNumber',
+                    params: [blockNumber, false]
+                });
+                displayResult('Latest Block Info', block);
+            } catch (error) {
+                handleError('getBlockByNumber', error);
+            }
+        }
+
+        // Дополнительные методы MetaMask
+        async function addNetwork() {
+            try {
+                if (!await checkMetaMask()) return;
+                const networkParams = {
+                    chainId: '0x539', // 1337 in decimal
+                    chainName: 'Local Testnet',
+                    nativeCurrency: {
+                        name: 'ETH',
+                        symbol: 'ETH',
+                        decimals: 18
+                    },
+                    rpcUrls: ['http://localhost:8545'],
+                    blockExplorerUrls: ['']
+                };
+                await window.ethereum.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [networkParams]
+                });
+                displayResult('Add Network', 'Request to add network sent successfully');
+            } catch (error) {
+                handleError('addNetwork', error);
+            }
+        }
+
+        async function switchNetwork() {
+            try {
+                if (!await checkMetaMask()) return;
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0x1' }] // Ethereum mainnet
+                });
+                displayResult('Switch Network', 'Request to switch to Ethereum mainnet sent successfully');
+            } catch (error) {
+                if (error.code === 4902) {
+                    displayResult('Switch Network', 'Network not found. Try adding it first with wallet_addEthereumChain');
+                } else {
+                    handleError('switchNetwork', error);
+                }
+            }
+        }
+
+        async function watchAsset() {
+            try {
+                if (!await checkMetaMask()) return;
+                const tokenParams = {
+                    type: 'ERC20',
+                    options: {
+                        address: '0x6B175474E89094C44Da98b954EedeAC495271d0F', // DAI address
+                        symbol: 'DAI',
+                        decimals: 18,
+                        image: 'https://cryptologos.cc/logos/multi-collateral-dai-dai-logo.png'
+                    }
+                };
+                const success = await window.ethereum.request({
+                    method: 'wallet_watchAsset',
+                    params: tokenParams
+                });
+                if (success) {
+                    displayResult('Watch Asset', 'Token successfully added to wallet');
+                } else {
+                    displayResult('Watch Asset', 'User rejected the request');
+                }
+            } catch (error) {
+                handleError('watchAsset', error);
+            }
+        }
+
+        async function getPermissions() {
+            try {
+                if (!await checkMetaMask()) return;
+                const permissions = await window.ethereum.request({
+                    method: 'wallet_getPermissions',
+                    params: []
+                });
+                displayResult('Current Permissions', permissions);
+            } catch (error) {
+                handleError('getPermissions', error);
+            }
+        }
+
+        async function requestPermissions() {
+            try {
+                if (!await checkMetaMask()) return;
+                const permissions = await window.ethereum.request({
+                    method: 'wallet_requestPermissions',
+                    params: [{
+                        eth_accounts: {}
+                    }]
+                });
+                displayResult('Requested Permissions', permissions);
+            } catch (error) {
+                handleError('requestPermissions', error);
+            }
+        }
+
+        async function scanQRCode() {
+            try {
+                if (!await checkMetaMask()) return;
+                const result = await window.ethereum.request({
+                    method: 'wallet_scanQRCode',
+                    params: []
+                });
+                displayResult('QR Code Scan Result', result);
+            } catch (error) {
+                handleError('scanQRCode', error);
+            }
+        }
+
+        async function getEncryptionPublicKey() {
+            try {
+                if (!await checkMetaMask()) return;
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length === 0) {
+                    displayResult('Error', 'No accounts found. Connect MetaMask first.');
+                    return;
+                }
+                const publicKey = await window.ethereum.request({
+                    method: 'eth_getEncryptionPublicKey',
+                    params: [accounts[0]]
+                });
+                displayResult('Encryption Public Key', publicKey);
+            } catch (error) {
+                handleError('getEncryptionPublicKey', error);
+            }
+        }
+
+        async function decrypt() {
+            try {
+                if (!await checkMetaMask()) return;
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length === 0) {
+                    displayResult('Error', 'No accounts found. Connect MetaMask first.');
+                    return;
+                }
+                
+                // Этот шаг требует предварительно зашифрованного сообщения
+                // Обычно вы бы использовали публичный ключ из eth_getEncryptionPublicKey
+                // и библиотеку вроде eth-sig-util для шифрования сообщения
+                const encryptedMessage = '0x7b2276657273696f6e223a227832353531392d7873616c736132302d706f6c7931333035222c226e6f6e6365223a22554335577a336f55334e71337646704c6c7463574d46596a764c534e43447158222c22657068656d5075626c69634b6579223a225249394579764d38346650644c594d326e7342654552566b47714b6f55533359536b46366f62466f757638383d222c2263697068657274657874223a22483032386a6f7663552f56484c507a414d6a77582b445a55326e5879414b574958347971435a4a4d3d227d';
+                
+                try {
+                    const decrypted = await window.ethereum.request({
+                        method: 'eth_decrypt',
+                        params: [encryptedMessage, accounts[0]]
+                    });
+                    displayResult('Decrypted Message', decrypted);
+                } catch (e) {
+                    displayResult('Decrypt Error', 'Для тестирования eth_decrypt требуется предварительно зашифрованное сообщение. Этот пример использует тестовое сообщение, которое может быть недействительным.');
+                }
+            } catch (error) {
+                handleError('decrypt', error);
+            }
         }
     </script>
 </body>

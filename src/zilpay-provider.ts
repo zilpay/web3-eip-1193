@@ -23,6 +23,19 @@ export class ZilPayProviderImpl implements ZilPayProvider {
     'eth_chainId',
     'eth_getCode',
     'eth_getStorageAt',
+    'eth_gasPrice',
+    'eth_signTypedData',
+    'eth_signTypedData_v4',
+    'eth_getTransactionCount',
+    'personal_sign',
+    'wallet_addEthereumChain',
+    'wallet_switchEthereumChain',
+    'wallet_watchAsset',
+    'wallet_getPermissions',
+    'wallet_requestPermissions',
+    'wallet_scanQRCode',
+    'eth_getEncryptionPublicKey',
+    'eth_decrypt'
   ]);
   #eventListeners: Map<string, Set<(...args: any[]) => void>> = new Map();
 
