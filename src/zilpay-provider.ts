@@ -93,7 +93,7 @@ export class ZilPayProviderImpl implements ZilPayProvider {
         ...meta,
       };
 
-      if (typeof window === 'undefined' || !window || !(window as any).FlutterWebView) {
+      if (typeof window === 'undefined' || !window || !(window as any).EIP1193Channel) {
         reject({
           message: 'ZilPay channel is not available',
           code: 4900,
@@ -103,7 +103,7 @@ export class ZilPayProviderImpl implements ZilPayProvider {
       }
 
       try {
-        (window as any).FlutterWebView.postMessage(JSON.stringify(message));
+        (window as any).EIP1193Channel.postMessage(JSON.stringify(message));
       } catch (e: unknown) {
         reject({
           message: `Failed to send request: ${(e as Error).message}`,

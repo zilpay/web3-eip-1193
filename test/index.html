@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>ZilPay | Introduce</title>
+    <title>ZilPay | Web3 Test DApp</title>
     <link rel="icon" type="image/x-icon" href="https://zilpay.io/favicon/favicon.ico">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="description" content="Test description for ZilPay">
-    <meta name="title" content="ZilPay MetaMask Test">
+    <meta name="description" content="Test description for ZilPay Web3 DApp">
+    <meta name="title" content="ZilPay Web3 Test DApp">
     <meta name="colors" content='{"primary": "#007bff", "secondary": "#0056b3", "background": "#f0f0f0", "text": "#000000"}'>
     <style>
         body {
@@ -50,6 +50,7 @@
             border-radius: 5px;
             margin-top: 20px;
             word-break: break-word;
+            white-space: pre-wrap;
         }
         @media (max-width: 480px) {
             .container {
@@ -64,63 +65,247 @@
 </head>
 <body>
     <div class="container">
-        <h1>MetaMask Test</h1>
-        <button onclick="connectWallet()">Connect Wallet</button>
-        <button onclick="getAccounts()">Get Accounts</button>
-        <button onclick="signMessage()">Sign Message</button>
+        <h1>Web3 Test DApp</h1>
+        <button onclick="requestAccounts()">eth_requestAccounts</button>
+        <button onclick="getAccounts()">eth_accounts</button>
+        <button onclick="signMessage()">eth_sign</button>
+        <button onclick="sendTransaction()">eth_sendTransaction</button>
+        <button onclick="getBalance()">eth_getBalance</button>
+        <button onclick="getTransactionByHash()">eth_getTransactionByHash</button>
+        <button onclick="getTransactionReceipt()">eth_getTransactionReceipt</button>
+        <button onclick="callContract()">eth_call</button>
+        <button onclick="estimateGas()">eth_estimateGas</button>
+        <button onclick="getBlockNumber()">eth_blockNumber</button>
+        <button onclick="getBlockByNumber()">eth_getBlockByNumber</button>
+        <button onclick="getBlockByHash()">eth_getBlockByHash</button>
+        <button onclick="subscribe()">eth_subscribe</button>
+        <button onclick="unsubscribe()">eth_unsubscribe</button>
+        <button onclick="getNetVersion()">net_version</button>
+        <button onclick="getChainId()">eth_chainId</button>
+        <button onclick="getCode()">eth_getCode</button>
+        <button onclick="getStorageAt()">eth_getStorageAt</button>
         <button onclick="checkMetaTags()">Check Meta Tags</button>
         <div id="result">Result will appear here</div>
     </div>
 
     <script>
         const resultDiv = document.getElementById('result');
+        const provider = window.ethereum || window.zilPay;
 
-        async function connectWallet() {
+        async function requestAccounts() {
             try {
-                if (window.ethereum) {
-                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    resultDiv.textContent = 'Connected: ' + JSON.stringify(accounts);
-                } else {
-                    resultDiv.textContent = 'MetaMask not found';
-                }
+                const accounts = await provider.request({ method: 'eth_requestAccounts' });
+                resultDiv.textContent = JSON.stringify(accounts, null, 2);
             } catch (error) {
-                resultDiv.textContent = 'Error: ' + error.message;
+                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
             }
         }
 
         async function getAccounts() {
             try {
-                if (window.ethereum) {
-                    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-                    resultDiv.textContent = 'Accounts: ' + JSON.stringify(accounts);
-                } else {
-                    resultDiv.textContent = 'MetaMask not found';
-                }
+                const accounts = await provider.request({ method: 'eth_accounts' });
+                resultDiv.textContent = JSON.stringify(accounts, null, 2);
             } catch (error) {
-                resultDiv.textContent = 'Error: ' + error.message;
+                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
             }
         }
 
         async function signMessage() {
             try {
-                if (window.ethereum) {
-                    const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-                    if (accounts.length === 0) {
-                        resultDiv.textContent = 'No accounts found. Connect MetaMask.';
-                        return;
-                    }
-                    const account = accounts[0];
-                    const message = 'Hello, MetaMask!';
-                    const signature = await window.ethereum.request({
-                        method: 'personal_sign',
-                        params: [message, account]
-                    });
-                    resultDiv.textContent = 'Signature: ' + signature;
-                } else {
-                    resultDiv.textContent = 'MetaMask not found';
-                }
+                const accounts = await provider.request({ method: 'eth_accounts' });
+                if (!accounts.length) throw new Error('No accounts connected');
+                const signature = await provider.request({
+                    method: 'eth_sign',
+                    params: [accounts[0], '0x48656c6c6f20576f726c64'] // "Hello World"
+                });
+                resultDiv.textContent = signature;
             } catch (error) {
-                resultDiv.textContent = 'Error: ' + error.message;
+                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
+            }
+        }
+
+        async function sendTransaction() {
+            try {
+                const accounts = await provider.request({ method: 'eth_accounts' });
+                if (!accounts.length) throw new Error('No accounts connected');
+                const txHash = await provider.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: accounts[0],
+                        to: '0x1234567890123456789012345678901234567890',
+                        value: '0x1'
+                    }]
+                });
+                resultDiv.textContent = txHash;
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
+            }
+        }
+
+        async function getBalance() {
+            try {
+                const accounts = await provider.request({ method: 'eth_accounts' });
+                if (!accounts.length) throw new Error('No accounts connected');
+                const balance = await provider.request({
+                    method: 'eth_getBalance',
+                    params: [accounts[0], 'latest']
+                });
+                resultDiv.textContent = balance;
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
+            }
+        }
+
+        async function getTransactionByHash() {
+            try {
+                const tx = await provider.request({
+                    method: 'eth_getTransactionByHash',
+                    params: ['0x0000000000000000000000000000000000000000000000000000000000000000']
+                });
+                resultDiv.textContent = JSON.stringify(tx, null, 2);
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
+            }
+        }
+
+        async function getTransactionReceipt() {
+            try {
+                const receipt = await provider.request({
+                    method: 'eth_getTransactionReceipt',
+                    params: ['0x0000000000000000000000000000000000000000000000000000000000000000']
+                });
+                resultDiv.textContent = JSON.stringify(receipt, null, 2);
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
+            }
+        }
+
+        async function callContract() {
+            try {
+                const result = await provider.request({
+                    method: 'eth_call',
+                    params: [{
+                        to: '0x1234567890123456789012345678901234567890',
+                        data: '0x'
+                    }, 'latest']
+                });
+                resultDiv.textContent = result;
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
+            }
+        }
+
+        async function estimateGas() {
+            try {
+                const gas = await provider.request({
+                    method: 'eth_estimateGas',
+                    params: [{
+                        to: '0x1234567890123456789012345678901234567890',
+                        value: '0x1'
+                    }]
+                });
+                resultDiv.textContent = gas;
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
+            }
+        }
+
+        async function getBlockNumber() {
+            try {
+                const blockNumber = await provider.request({ method: 'eth_blockNumber' });
+                resultDiv.textContent = blockNumber;
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
+            }
+        }
+
+        async function getBlockByNumber() {
+            try {
+                const block = await provider.request({
+                    method: 'eth_getBlockByNumber',
+                    params: ['latest', false]
+                });
+                resultDiv.textContent = JSON.stringify(block, null, 2);
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
+            }
+        }
+
+        async function getBlockByHash() {
+            try {
+                const block = await provider.request({
+                    method: 'eth_getBlockByHash',
+                    params: ['0x0000000000000000000000000000000000000000000000000000000000000000', false]
+                });
+                resultDiv.textContent = JSON.stringify(block, null, 2);
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
+            }
+        }
+
+        async function subscribe() {
+            try {
+                const subscription = await provider.request({
+                    method: 'eth_subscribe',
+                    params: ['newHeads']
+                });
+                resultDiv.textContent = subscription;
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
+            }
+        }
+
+        async function unsubscribe() {
+            try {
+                const result = await provider.request({
+                    method: 'eth_unsubscribe',
+                    params: ['0x123'] // Example subscription ID
+                });
+                resultDiv.textContent = result;
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
+            }
+        }
+
+        async function getNetVersion() {
+            try {
+                const netVersion = await provider.request({ method: 'net_version' });
+                resultDiv.textContent = netVersion;
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
+            }
+        }
+
+        async function getChainId() {
+            try {
+                const chainId = await provider.request({ method: 'eth_chainId' });
+                resultDiv.textContent = chainId;
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
+            }
+        }
+
+        async function getCode() {
+            try {
+                const code = await provider.request({
+                    method: 'eth_getCode',
+                    params: ['0x1234567890123456789012345678901234567890', 'latest']
+                });
+                resultDiv.textContent = code;
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
+            }
+        }
+
+        async function getStorageAt() {
+            try {
+                const storage = await provider.request({
+                    method: 'eth_getStorageAt',
+                    params: ['0x1234567890123456789012345678901234567890', '0x0', 'latest']
+                });
+                resultDiv.textContent = storage;
+            } catch (error) {
+                resultDiv.textContent = 'Error: ' + JSON.stringify(error, null, 2);
             }
         }
 
@@ -155,12 +340,8 @@
                 }
             }
 
-            const result = {
-                description: description,
-                title: title,
-                colors: colors
-            };
-            resultDiv.textContent = 'Meta Tags: ' + JSON.stringify(result, null, 2);
+            const result = { description, title, colors };
+            resultDiv.textContent = JSON.stringify(result, null, 2);
         }
     </script>
 </body>
