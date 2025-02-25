@@ -27,6 +27,7 @@ export class ZilPayProviderImpl implements ZilPayProvider {
     'eth_signTypedData_v4',
     'eth_getTransactionCount',
     'personal_sign',
+    'eth_sign',
     'wallet_addEthereumChain',
     'wallet_switchEthereumChain',
     'wallet_watchAsset',
