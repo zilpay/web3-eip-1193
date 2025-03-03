@@ -106,7 +106,7 @@ export class ZilPayProviderImpl implements ZilPayProvider {
         ...meta,
       };
 
-      if (typeof window === 'undefined' || !window || !(window as any).EIP1193Channel) {
+      if (typeof window === 'undefined' || !window || !(window as any).flutter_inappwebview) {
         reject({
           message: 'ZilPay channel is not available',
           code: 4900,
@@ -114,36 +114,45 @@ export class ZilPayProviderImpl implements ZilPayProvider {
         } as ProviderRpcError);
         return;
       }
+    
+      const responseHandler = (event: MessageEvent) => {
+        let data = event.data;
+        if (!data || typeof data !== 'object') return;
+      
+        if (data.type === 'ZILPAY_RESPONSE' && data.uuid === uuid) {
+          if (data.payload.error) {
+            reject({
+              message: data.payload.error.message,
+              code: data.payload.error.code || 4000,
+              data: data.payload.error.data,
+            } as ProviderRpcError);
+          } else {
+            resolve(data.payload.result);
+          }
+          window.removeEventListener('message', responseHandler);
+        }
+      };
+    
+      window.addEventListener('message', responseHandler);
 
       try {
-        (window as any).EIP1193Channel.postMessage(JSON.stringify(message));
+        (window as any).flutter_inappwebview.callHandler('EIP1193Channel', JSON.stringify(message))
+          .catch((error: any) => {
+            window.removeEventListener('message', responseHandler);
+            reject({
+              message: `Failed to send request: ${error.message || 'Unknown error'}`,
+              code: 4000,
+              data: error,
+            } as ProviderRpcError);
+          });
       } catch (e: unknown) {
+        window.removeEventListener('message', responseHandler);
         reject({
           message: `Failed to send request: ${(e as Error).message}`,
           code: 4000,
           data: e,
         } as ProviderRpcError);
-        return;
       }
-
-      const responseHandler = (event: MessageEvent) => {
-        let eventData: ZilPayResponseData = event.data;
-
-        if (eventData.type === 'ZILPAY_RESPONSE' && eventData.uuid === uuid) {
-          if (eventData.payload.error) {
-            reject({
-              message: eventData.payload.error.message,
-              code: eventData.payload.error.code || 4000,
-              data: eventData.payload.error.data,
-            } as ProviderRpcError);
-          } else {
-            resolve(eventData.payload.result);
-          }
-          window.removeEventListener('message', responseHandler);
-        }
-      };
-
-      window.addEventListener('message', responseHandler);
     });
   }
 

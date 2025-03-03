@@ -28,6 +28,7 @@ export * from './src/zilpay-provider';
       console.warn('Using fallback assignment for ethereum due to:', defineError);
     }
 
+    (window as any).__zilpay_response_handlers = (window as any).__zilpay_response_handlers || {};
     window.dispatchEvent(new Event('ethereum#initialized'));
     console.log('Ethereum provider injected successfully');
   } catch (error) {
