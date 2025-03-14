@@ -1,4 +1,5 @@
 import { ZilPayProviderImpl } from './src/zilpay-provider';
+import { announceProvider, setupEIP6963RequestListener } from './src/eip6963-utils';
 
 export * from './src/types';
 export * from './src/zilpay-provider';
@@ -10,28 +11,28 @@ export * from './src/zilpay-provider';
   }
 
   try {
-    if ('ethereum' in window && window.ethereum) {
-      console.warn('Ethereum provider already exists in window');
-      return;
-    }
-
     const provider = new ZilPayProviderImpl();
-
-    try {
-      Object.defineProperty(window, 'ethereum', {
-        value: provider,
-        writable: false,
-        configurable: true,
-      });
-    } catch (defineError) {
-      (window as any).ethereum = provider;
-      console.warn('Using fallback assignment for ethereum due to:', defineError);
+    
+    if (!('ethereum' in window) || !window.ethereum) {
+      try {
+        Object.defineProperty(window, 'ethereum', {
+          value: provider,
+          writable: false,
+          configurable: true,
+        });
+      } catch (defineError) {
+        (window as any).ethereum = provider;
+        console.warn('Using fallback assignment for ethereum due to:', defineError);
+      }
     }
+
+    announceProvider(provider);
+    setupEIP6963RequestListener(provider);
 
     (window as any).__zilpay_response_handlers = (window as any).__zilpay_response_handlers || {};
     window.dispatchEvent(new Event('ethereum#initialized'));
-    console.log('Ethereum provider injected successfully');
   } catch (error) {
     console.error('Failed to inject Ethereum provider:', error);
   }
 })();
+
