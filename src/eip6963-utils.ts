@@ -1,5 +1,4 @@
 import type { EIP6963ProviderInfo, EIP6963ProviderDetail, ZilPayProvider } from './types';
-import { getFavicon } from './favicon';
 import { uuidv4 } from './uuid';
 
 export function createZilPayProviderInfo(): EIP6963ProviderInfo {
@@ -7,7 +6,7 @@ export function createZilPayProviderInfo(): EIP6963ProviderInfo {
     uuid: uuidv4(),
     name: "ZilPay Wallet",
     icon: getZilPayIcon(),
-    rdns: "io.zilpay.wallet"
+    rdns: "io.zilpay"
   };
 }
 
