@@ -1,13 +1,18 @@
 import type { EIP6963ProviderInfo, EIP6963ProviderDetail, ZilPayProvider } from './types';
 import { uuidv4 } from './uuid';
 
-export function createZilPayProviderInfo(): EIP6963ProviderInfo {
-  return {
-    uuid: uuidv4(),
-    name: "ZilPay Wallet",
-    icon: getZilPayIcon(),
-    rdns: "io.zilpay"
-  };
+let providerInfo: EIP6963ProviderInfo | null = null;
+
+export function getOrCreateZilPayProviderInfo(): EIP6963ProviderInfo {
+  if (!providerInfo) {
+    providerInfo = {
+      uuid: uuidv4(),
+      name: "ZilPay Wallet",
+      icon: getZilPayIcon(),
+      rdns: "io.zilpay"
+    };
+  }
+  return providerInfo;
 }
 
 function getZilPayIcon(): string {
@@ -17,7 +22,7 @@ function getZilPayIcon(): string {
 export function announceProvider(provider: ZilPayProvider): void {
   if (typeof window === 'undefined') return;
   
-  const providerInfo = createZilPayProviderInfo();
+  const providerInfo = getOrCreateZilPayProviderInfo();
   const providerDetail: EIP6963ProviderDetail = { 
     info: providerInfo, 
     provider 

@@ -10,6 +10,10 @@ export * from './src/zilpay-provider';
     return;
   }
 
+  if ((window as any).__zilpayInjected) {
+    return;
+  }
+
   try {
     const provider = new ZilPayProviderImpl();
     
@@ -30,6 +34,7 @@ export * from './src/zilpay-provider';
     setupEIP6963RequestListener(provider);
 
     (window as any).__zilpay_response_handlers = (window as any).__zilpay_response_handlers || {};
+    (window as any).__zilpayInjected = true;
     window.dispatchEvent(new Event('ethereum#initialized'));
   } catch (error) {
     console.error('Failed to inject Ethereum provider:', error);

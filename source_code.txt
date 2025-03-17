@@ -1,0 +1,465 @@
+Project Path: src
+
+Source Tree:
+
+```
+src
+├── meta.ts
+├── uuid.ts
+├── errors.ts
+├── types.ts
+├── zilpay-provider.ts
+├── favicon.ts
+└── eip6963-utils.ts
+
+```
+
+`/Users/rinat/projects/zilpay/web3-evm/src/meta.ts`:
+
+```ts
+import type { MetaData } from "./types";
+
+export function getMetaDataFromTags(): MetaData {
+  if (typeof document === 'undefined') {
+    return {
+      description: null,
+      title: null,
+      colors: null,
+    };
+  }
+
+  const metaTags = document.getElementsByTagName('meta');
+  let description: string | null = null;
+  let title: string | null = null;
+
+  for (let i = 0; i < metaTags.length; i++) {
+    const meta = metaTags[i];
+    const name = meta.getAttribute('name');
+    const content = meta.getAttribute('content');
+
+    if (!name || !content) continue;
+
+    switch (name.toLowerCase()) {
+      case 'description':
+        description = content;
+        break;
+      case 'title':
+        title = content;
+        break;
+    }
+  }
+
+  const bodyStyles = window.getComputedStyle(document.body);
+  const button = document.querySelector('button');
+  const buttonStyles = button ? window.getComputedStyle(button) : null;
+  const buttonHoverStyles = button ? window.getComputedStyle(button, ':hover') : null;
+
+  const colors = {
+    background: rgbToHex(bodyStyles.backgroundColor),
+    text: rgbToHex(bodyStyles.color),
+    primary: buttonStyles ? rgbToHex(buttonStyles.backgroundColor) : undefined,
+    secondary: buttonHoverStyles && buttonHoverStyles.backgroundColor !== buttonStyles?.backgroundColor 
+      ? rgbToHex(buttonHoverStyles.backgroundColor) 
+      : buttonStyles ? rgbToHex(buttonStyles.backgroundColor) : undefined,
+  };
+
+  return {
+    description,
+    title,
+    colors,
+  };
+}
+
+function rgbToHex(rgb: string): string {
+  const match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+  if (!match) return rgb;
+  const r = parseInt(match[1]).toString(16).padStart(2, '0');
+  const g = parseInt(match[2]).toString(16).padStart(2, '0');
+  const b = parseInt(match[3]).toString(16).padStart(2, '0');
+  return `#${r}${g}${b}`;
+}
+
+```
+
+`/Users/rinat/projects/zilpay/web3-evm/src/uuid.ts`:
+
+```ts
+export function uuidv4(): string {
+  if (typeof window !== 'undefined' && window.crypto && typeof window.crypto.randomUUID === 'function') {
+    return window.crypto.randomUUID();
+  }
+  
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+
+```
+
+`/Users/rinat/projects/zilpay/web3-evm/src/errors.ts`:
+
+```ts
+export const PROVIDER_ERROR_CODES: Set<number> = new Set([
+  4001, // User Rejected Request
+  4100, // Unauthorized
+  4200, // Unsupported Method
+  4900, // Disconnected
+  4901, // Chain Disconnected
+  -32603, // Internal error
+  -32000, // Invalid input
+]);
+
+
+```
+
+`/Users/rinat/projects/zilpay/web3-evm/src/types.ts`:
+
+```ts
+export interface RequestPayload {
+  method: string;
+  params?: Array<any> | Record<string, any>;
+}
+
+export interface ProviderRpcError extends Error {
+  message: string;
+  code: number;
+  data?: any;
+}
+
+export interface ProviderConnectInfo {
+  readonly chainId: string;
+}
+
+export interface ProviderMessage {
+  readonly type: string;
+  readonly data: unknown;
+}
+
+export interface EthSubscription extends ProviderMessage {
+  readonly type: 'eth_subscription';
+  readonly data: {
+    readonly subscription: string;
+    readonly result: unknown;
+  };
+}
+
+export interface ZilPayProvider {
+  isZilPay: boolean;
+  request(payload: RequestPayload): Promise<any>;
+  on(event: 'connect', callback: (info: ProviderConnectInfo) => void): void;
+  on(event: 'disconnect', callback: (error: ProviderRpcError) => void): void;
+  on(event: 'chainChanged', callback: (chainId: string) => void): void;
+  on(event: 'accountsChanged', callback: (accounts: string[]) => void): void;
+  on(event: 'message', callback: (message: ProviderMessage) => void): void;
+  removeListener(event: 'connect', callback: (info: ProviderConnectInfo) => void): void;
+  removeListener(event: 'disconnect', callback: (error: ProviderRpcError) => void): void;
+  removeListener(event: 'chainChanged', callback: (chainId: string) => void): void;
+  removeListener(event: 'accountsChanged', callback: (accounts: string[]) => void): void;
+  removeListener(event: 'message', callback: (message: ProviderMessage) => void): void;
+  enable(): Promise<string[]>;
+}
+
+export interface ZilPayEventData {
+  event: string;
+  data: ProviderConnectInfo | ProviderRpcError | string | string[] | ProviderMessage;
+}
+
+export interface ZilPayResponseData {
+  type: string;
+  uuid: string;
+  payload: {
+    error?: ProviderRpcError;
+    result: unknown
+  };
+}
+
+export interface MetaData {
+  description: string | null;
+  title: string | null;
+  colors: {
+    primary?: string;
+    secondary?: string;
+    background?: string;
+    text?: string;
+  } | null;
+}
+
+export interface EIP6963ProviderInfo {
+  uuid: string;
+  name: string;
+  icon: string;
+  rdns: string;
+}
+
+export interface EIP6963ProviderDetail {
+  info: EIP6963ProviderInfo;
+  provider: ZilPayProvider;
+}
+
+export interface EIP6963RequestProviderEvent extends Event {
+  type: "eip6963:requestProvider";
+}
+
+export interface EIP6963AnnounceProviderEvent extends CustomEvent {
+  type: "eip6963:announceProvider";
+  detail: EIP6963ProviderDetail;
+}
+
+```
+
+`/Users/rinat/projects/zilpay/web3-evm/src/zilpay-provider.ts`:
+
+```ts
+import { getFavicon } from './favicon';
+import { getMetaDataFromTags } from './meta';
+import type { ProviderRpcError, RequestPayload, ZilPayProvider, ProviderConnectInfo, ProviderMessage, ZilPayEventData, ZilPayResponseData } from './types';
+
+export class ZilPayProviderImpl implements ZilPayProvider {
+  readonly isZilPay: boolean = true;
+  readonly isBearby: boolean = true;
+  readonly supportedMethods: Set<string> = new Set([
+    'eth_requestAccounts',
+    'eth_accounts', 
+    'eth_sendTransaction',
+    'eth_getBalance',
+    'eth_getTransactionByHash',
+    'eth_getTransactionReceipt',
+    'eth_call',
+    'eth_estimateGas',
+    'eth_blockNumber',
+    'eth_getBlockByNumber',
+    'eth_getBlockByHash',
+    'eth_subscribe',
+    'eth_unsubscribe',
+    'net_version',
+    'eth_chainId',
+    'eth_getCode',
+    'eth_getStorageAt',
+    'eth_gasPrice',
+    'eth_signTypedData',
+    'eth_signTypedData_v4',
+    'eth_getTransactionCount',
+    'personal_sign',
+    'eth_sign',
+    'wallet_addEthereumChain',
+    'wallet_switchEthereumChain',
+    'wallet_watchAsset',
+    'wallet_getPermissions',
+    'wallet_requestPermissions',
+    'wallet_scanQRCode',
+    'eth_getEncryptionPublicKey',
+    'eth_decrypt'
+  ]);
+  #eventListeners: Map<string, Set<(...args: any[]) => void>> = new Map();
+
+  constructor() {
+    this.#initializeEvents();
+    this.#setupFlutterEventHandler();
+  }
+
+  #initializeEvents() {
+    this.#eventListeners.set('connect', new Set<(info: ProviderConnectInfo) => void>());
+    this.#eventListeners.set('disconnect', new Set<(error: ProviderRpcError) => void>());
+    this.#eventListeners.set('chainChanged', new Set<(chainId: string) => void>());
+    this.#eventListeners.set('accountsChanged', new Set<(accounts: string[]) => void>());
+    this.#eventListeners.set('message', new Set<(message: ProviderMessage) => void>());
+  }
+
+  #setupFlutterEventHandler() {
+    if (typeof window !== 'undefined' && window) {
+      (window as any).handleZilPayEvent = (eventData: ZilPayEventData) => {
+        const listeners = this.#eventListeners.get(eventData.event);
+        if (listeners) {
+          switch (eventData.event) {
+            case 'connect':
+              listeners.forEach(callback => callback(eventData.data as ProviderConnectInfo));
+              break;
+            case 'disconnect':
+              listeners.forEach(callback => callback(eventData.data as ProviderRpcError));
+              break;
+            case 'chainChanged':
+              const chainId = eventData.data as string;
+              if (typeof chainId !== 'string' || !chainId.startsWith('0x')) {
+                console.warn('Invalid chainId format for chainChanged event');
+                return;
+              }
+              listeners.forEach(callback => callback(chainId));
+              break;
+            case 'accountsChanged':
+              listeners.forEach(callback => callback(eventData.data as string[]));
+              break;
+            case 'message':
+              listeners.forEach(callback => callback(eventData.data as ProviderMessage));
+              break;
+          }
+        }
+      };
+    }
+  }
+
+  async request(payload: RequestPayload): Promise<unknown> {
+    if (!this.supportedMethods.has(payload.method)) {
+      return Promise.reject({
+        message: 'Unsupported method',
+        code: 4200,
+        data: { method: payload.method },
+      } as ProviderRpcError);
+    }
+
+    const icon = getFavicon();
+
+    return new Promise((resolve, reject) => {
+      const uuid = Math.random().toString(36).substring(2);
+      const meta = getMetaDataFromTags();
+      const message = {
+        type: 'ZILPAY_REQUEST',
+        uuid,
+        payload,
+        icon,
+        ...meta,
+      };
+
+      if (typeof window === 'undefined' || !window || !(window as any).flutter_inappwebview) {
+        reject({
+          message: 'ZilPay channel is not available',
+          code: 4900,
+          data: null,
+        } as ProviderRpcError);
+        return;
+      }
+    
+      const responseHandler = (event: MessageEvent) => {
+        let data = event.data;
+        if (!data || typeof data !== 'object') return;
+      
+        if (data.type === 'ZILPAY_RESPONSE' && data.uuid === uuid) {
+          if (data.payload.error) {
+            reject({
+              message: data.payload.error.message,
+              code: data.payload.error.code || 4000,
+              data: data.payload.error.data,
+            } as ProviderRpcError);
+          } else {
+            resolve(data.payload.result);
+          }
+          window.removeEventListener('message', responseHandler);
+        }
+      };
+    
+      window.addEventListener('message', responseHandler);
+
+      try {
+        (window as any).flutter_inappwebview.callHandler('EIP1193Channel', JSON.stringify(message))
+          .catch((error: any) => {
+            window.removeEventListener('message', responseHandler);
+            reject({
+              message: `Failed to send request: ${error.message || 'Unknown error'}`,
+              code: 4000,
+              data: error,
+            } as ProviderRpcError);
+          });
+      } catch (e: unknown) {
+        window.removeEventListener('message', responseHandler);
+        reject({
+          message: `Failed to send request: ${(e as Error).message}`,
+          code: 4000,
+          data: e,
+        } as ProviderRpcError);
+      }
+    });
+  }
+
+  async enable(): Promise<string[]> {
+    return this.request({ method: 'eth_requestAccounts' }) as Promise<string[]>;
+  }
+
+  on(event: 'connect', callback: (info: ProviderConnectInfo) => void): void;
+  on(event: 'disconnect', callback: (error: ProviderRpcError) => void): void;
+  on(event: 'chainChanged', callback: (chainId: string) => void): void;
+  on(event: 'accountsChanged', callback: (accounts: string[]) => void): void;
+  on(event: 'message', callback: (message: ProviderMessage) => void): void;
+  on(event: string, callback: (...args: any[]) => void): void {
+    const listeners = this.#eventListeners.get(event);
+    if (listeners) {
+      listeners.add(callback);
+    }
+  }
+
+  removeListener(event: 'connect', callback: (info: ProviderConnectInfo) => void): void;
+  removeListener(event: 'disconnect', callback: (error: ProviderRpcError) => void): void;
+  removeListener(event: 'chainChanged', callback: (chainId: string) => void): void;
+  removeListener(event: 'accountsChanged', callback: (accounts: string[]) => void): void;
+  removeListener(event: 'message', callback: (message: ProviderMessage) => void): void;
+  removeListener(event: string, callback: (...args: any[]) => void): void {
+    const listeners = this.#eventListeners.get(event);
+    if (listeners) {
+      listeners.delete(callback);
+    }
+  }
+}
+
+```
+
+`/Users/rinat/projects/zilpay/web3-evm/src/favicon.ts`:
+
+```ts
+export function getFavicon() {
+  let ref = globalThis.document.querySelector<HTMLLinkElement>('link[rel*=\'icon\']');
+
+  if (!ref) {
+    throw new Error('website favicon is required');
+  }
+
+  return ref.href;
+}
+
+
+```
+
+`/Users/rinat/projects/zilpay/web3-evm/src/eip6963-utils.ts`:
+
+```ts
+import type { EIP6963ProviderInfo, EIP6963ProviderDetail, ZilPayProvider } from './types';
+import { uuidv4 } from './uuid';
+
+export function createZilPayProviderInfo(): EIP6963ProviderInfo {
+  return {
+    uuid: uuidv4(),
+    name: "ZilPay Wallet",
+    icon: getZilPayIcon(),
+    rdns: "io.zilpay"
+  };
+}
+
+function getZilPayIcon(): string {
+    return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0yMzUuMzU4IDUxMS41NDNDMTUyLjIxIDUwMy4xMzQgNzYuNDczOCA0NTkuMTUyIDM1Ljg2NjQgMzk1LjQ0MkMxOS40MzAxIDM2OS41NyA2LjUzODg4IDMzNi41ODMgMi4zNDkyNCAzMDkuNzRDMC40NzIxNDMgMjkxLjA0NiAtMC4yODEyMDggMjcyLjI1NCAwLjA5MzI3NTYgMjUzLjQ2OUMyLjAyNjk2IDE5NS4yNTYgMTUuNTYyNyAxNTAuMzA0IDQyLjk1NjYgMTEwLjIwMkM1MS40MTggOTcuNjEwNyA2MS4zNzQzIDg2LjA5OTUgNzIuNjA2NCA3NS45MjE1Qzk0LjA3NDUgNTQuODk5MSAxMTkuMDU0IDM3LjgyMjkgMTQ2LjQwOSAyNS40NzA4QzE3MS4zNSAxMy40NzkgMTk3Ljk4MSA1LjQwNzQzIDIyNS4zNjcgMS41MzkxNUMyNDYuNjk3IC0wLjYxNTk5OCAyNjguMTk0IC0wLjUwNzYgMjg5LjUwMSAxLjg2MjU1QzMzOC40ODggOS4zMDA3NiAzODEuNjc0IDMwLjMyMTggNDIzLjI0OCA2Ni44NjYyQzQ2NC44MjIgMTAzLjQxMSA0OTYuNDA1IDE1MS45MjEgNTA3LjA0MSAxOTguNDlDNTExLjIzIDIxNS45NTQgNTExLjg3NSAyMjIuNzQ2IDUxMS44NzUgMjQ0LjQxM0M1MTIuNDY4IDI2MC4yODMgNTEwLjk1IDI3Ni4xNjIgNTA3LjM2MyAyOTEuNjNMNTA0Ljc4NSAzMDMuOTE5TDQ5NS43NjEgMzA1Ljg2QzQ2OS4yMTEgMzExLjA3NyA0NDMuMDQ1IDMxOC4xMDEgNDE3LjQ0NyAzMjYuODgxQzQwMS45NzcgMzMyLjcwMiAzOTguNzU0IDMzMy45OTUgMzc1Ljg3MiAzNDQuMDIxQzM1Mi45OTEgMzU0LjA0NiAzNDMuOTY3IDM1Ny42MDQgMzMyLjA0MiAzNjAuODM4QzMwNy4yMjcgMzY3LjYyOSAyODAuOCAzNjguMjc2IDI2My4wNzQgMzYyLjQ1NUMyMzguOTAzIDM1NC4zNyAyMjAuODU1IDMzNC45NjYgMjE2Ljk4OCAzMTMuMjk4QzIxNS43NTMgMzAzLjQ3MSAyMTYuMjk5IDI5My41IDIxOC42IDI4My44NjhDMjIzLjc1NiAyNjUuNDM0IDIzNS4wMzYgMjQ2LjM1NCAyNTIuNzYxIDIyNi42MjZMMjU4Ljg4NSAyMjAuMTU4QzI1OC44ODUgMjIwLjE1OCAyNjAuMTc0IDIyOC4yNDMgMjYxLjE0MSAyMzcuNjIyQzI2Mi4xMDcgMjQ3LjAwMSAyNjMuMzk3IDI1NS4wODYgMjYzLjM5NyAyNTUuNDA5TDI3MC40ODcgMjUzLjE0NUMyOTEuNzcxIDI0NS40NTIgMzE0Ljc5NyAyNDMuOTk0IDMzNi44NzcgMjQ4Ljk0MUMzNTQuMjg5IDI1My4yMDMgMzcxLjQwOSAyNTguNjA0IDM4OC4xMTkgMjY1LjExMUMzOTUuODU0IDI2OC4wMjIgNDA0LjIzMyAyNzAuOTMyIDQwNy4xMzQgMjcxLjU3OUM0MjQuMDYzIDI3My44NDQgNDQxLjI4NiAyNzEuNjEzIDQ1Ny4wODcgMjY1LjExMUM0NjAuOTU1IDI2My40OTQgNDYxLjI3NyAyNjMuMTcxIDQ2Mi4yNDQgMjU5LjI5QzQ2My41MzYgMjUwLjI4MSA0NjMuNTM2IDI0MS4xMzMgNDYyLjI0NCAyMzIuMTI0TDQ2MS4yNzcgMjI3LjI3M0w0NDUuNDg1IDIxNi42MDFDMzUxLjM3OSAxNTMuODYxIDI3Mi4wOTggMTE2LjM0NyAyMDUuMDY0IDEwMy40MTFDMTg2LjY5NCA5OS41Mjk3IDE1NC43ODggOTYuNjE5MSAxNTQuNzg4IDk4LjU1OTVDMTU0Ljc4OCAxMDAuNSAxNTQuNzg4IDk5Ljg1MzEgMTU0LjQ2NiAxMDAuMTc3QzE1NC4xNDMgMTAwLjUgMTYzLjQ5IDEwNS42NzQgMTg3Ljk4MyAxMTcuNjRMMjIxLjgyMiAxMzQuMTM0QzIxNy4wOTQgMTM2LjE0NCAyMTIuMjUyIDEzNy44NzIgMjA3LjMyIDEzOS4zMDhDMTg5LjAwMSAxNDUuMTMgMTcxLjEyMiAxNTIuMjY0IDE1My44MjEgMTYwLjY1M0MxNDAuOTMgMTY3LjEyMSAxMjIuMjM4IDE3Ny43OTMgMTIyLjIzOCAxNzkuMDg2TDEzNy43MDcgMTgxLjAyN0wxNTMuMTc3IDE4Mi4zMkwxNDQuNzk3IDE5MS4zNzZDMTMzLjE5NSAyMDMuMzQxIDEyNi43NSAyMTEuMTAzIDExMC4zMTMgMjMxLjE1NEw5Ni43Nzc0IDI0OC4yOTRIMTA4LjcwMkMxMTIuNjk2IDI0OC4yOTYgMTE2LjY4NCAyNDguNjIgMTIwLjYyNiAyNDkuMjY0QzEyMC42MjYgMjQ5LjU4OCAxMTUuMTQ3IDI2OC4wMjIgMTA4LjM4IDI5MC4zMzZDMTAxLjYxMiAzMTIuNjUxIDk2LjEzMjkgMzMxLjA4NSA5Ni40NTUyIDMzMS4wODVMMTA5LjAyNCAzMjguNDk4QzExNy40MDMgMzI2LjU1NyAxMjEuOTE1IDMyNS45MSAxMjIuMjM4IDMyNi41NTdDMTIyLjU2IDMyNy4yMDQgMTIzLjg0OSAzNDQuOTkxIDEyNS40NiAzNjYuNjU5QzEyNy4wNzIgMzg4LjMyNyAxMjguMDM5IDQwNi4xMTQgMTI4LjM2MSA0MDYuMTE0QzEzMi4yMjcgNDAzLjQ4NSAxMzUuODkgNDAwLjU2NCAxMzkuMzE4IDM5Ny4zODJMMTUwLjkyMSAzODguNjVDMTUxLjI0MyAzODguNjUgMTYwLjkxMSA0MDMuMjAzIDE3Mi44MzYgNDIwLjk5QzE4NC43NiA0MzguNzc3IDE5NC40MjggNDUzLjMzIDE5NC43NTEgNDUzLjMzQzE5OC41MTIgNDQ5Ljk4NiAyMDEuOTY0IDQ0Ni4zMDYgMjA1LjA2NCA0NDIuMzM1QzIxMi43OTggNDMzLjI4IDIxNS4wNTQgNDMxLjAxNiAyMTUuNjk5IDQzMS45ODZMMjI0LjcyMyA0NDIuNjU4QzIyOC45MTMgNDQ3LjgzMyAyMzYuNjQ3IDQ1Ni4yNDEgMjQxLjgwNCA0NjEuNDE1TDI1MC44MjggNDcwLjQ3MUgyNzAuMTY0QzMwMC43ODEgNDcwLjQ3MSAzMTkuNzk2IDQ3My4zODEgMzQ1LjI1NiA0ODIuNzZMMzUyLjk5MSA0ODUuMzQ3TDM1MC40MTIgNDg3LjI4OEMzMzUuMjY1IDQ5OC42MDcgMzE1LjYwNiA1MDYuMDQ1IDI5MS4xMTMgNTA5LjkyNkMyODEuMjgzIDUxMS4yMjYgMjcxLjM3OCA1MTEuODc2IDI2MS40NjMgNTExLjg2NkMyNTAuODI4IDUxMi4xODkgMjM4LjkwMyA1MTEuODY2IDIzNS4zNTggNTExLjU0M1oiIGZpbGw9InVybCgjcGFpbnQwX2xpbmVhcl85N18xNzcpIi8+CjxkZWZzPgo8bGluZWFyR3JhZGllbnQgaWQ9InBhaW50MF9saW5lYXJfOTdfMTc3IiB4MT0iMTAxLjUzMyIgeTE9IjU1LjU0MDYiIHgyPSIzMjEuODQiIHkyPSI0OTQuNjI5IiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+CjxzdG9wIG9mZnNldD0iMC4wMDUiIHN0b3AtY29sb3I9IiMyOUNDQzQiLz4KPHN0b3Agb2Zmc2V0PSIwLjU5NSIgc3RvcC1jb2xvcj0iI0RGMDFCOCIvPgo8c3RvcCBvZmZzZXQ9IjAuODExNDU5IiBzdG9wLWNvbG9yPSIjRUYzQzhFIi8+CjxzdG9wIG9mZnNldD0iMSIvPgo8L2xpbmVhckdyYWRpZW50Pgo8L2RlZnM+Cjwvc3ZnPgo=";
+}
+
+export function announceProvider(provider: ZilPayProvider): void {
+  if (typeof window === 'undefined') return;
+  
+  const providerInfo = createZilPayProviderInfo();
+  const providerDetail: EIP6963ProviderDetail = { 
+    info: providerInfo, 
+    provider 
+  };
+  
+  const announceEvent = new CustomEvent("eip6963:announceProvider", {
+    detail: Object.freeze(providerDetail)
+  });
+  
+  window.dispatchEvent(announceEvent);
+}
+
+export function setupEIP6963RequestListener(provider: ZilPayProvider): void {
+  if (typeof window === 'undefined') return;
+  
+  window.addEventListener("eip6963:requestProvider", () => {
+    announceProvider(provider);
+  });
+}
+
+```
