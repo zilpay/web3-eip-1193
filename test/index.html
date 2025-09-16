@@ -116,9 +116,10 @@
             <button onclick="getChainId()">eth_chainId</button>
             <button onclick="estimateGas()">eth_estimateGas</button>
             <button onclick="getGasPrice()">eth_gasPrice</button>
-            <button onclick="signTransaction()">eth_sign</button> <!-- Новый метод -->
+            <button onclick="signTransaction()">eth_sign</button>
             <button onclick="sendTransaction()">eth_sendTransaction</button>
             <button onclick="signTypedData()">eth_signTypedData_v4</button>
+            <button onclick="displayLedgerSignature()">Display Ledger Signature</button> <!-- Новая кнопка -->
             <button onclick="getTransactionCount()">eth_getTransactionCount</button>
             <button onclick="getBlockByNumber()">eth_getBlockByNumber</button>
         </div>
@@ -402,8 +403,8 @@
                 const transactionParameters = {
                     from: accounts[0],
                     to: accounts[0],
-                    value: '0x0', // 0 ETH
-                    gas: '0x5208', // 21000 gas
+                    value: '0x0',
+                    gas: '0x5208',
                     data: '0x'
                 };
                 const txHash = await window.ethereum.request({
@@ -460,6 +461,64 @@
             }
         }
 
+        async function displayLedgerSignature() {
+            try {
+                // Здесь предполагается, что подпись получена из Flutter
+                // Для теста вы можете вставить подпись вручную
+                const ledgerSignature = prompt("Введите подпись от Ledger (формат: v,r,s)", "27,0x123...,0x456...");
+                if (!ledgerSignature) {
+                    displayResult('Error', 'No signature provided');
+                    return;
+                }
+
+                // Разбираем подпись
+                const [v, r, s] = ledgerSignature.split(',');
+                if (!v || !r || !s) {
+                    displayResult('Error', 'Invalid signature format. Expected: v,r,s');
+                    return;
+                }
+
+                // Формируем TypedData для проверки
+                const typedData = {
+                    types: {
+                        EIP712Domain: [
+                            { name: 'name', type: 'string' },
+                            { name: 'version', type: 'string' },
+                            { name: 'chainId', type: 'uint256' },
+                            { name: 'verifyingContract', type: 'address' }
+                        ],
+                        Message: [
+                            { name: 'content', type: 'string' }
+                        ]
+                    },
+                    primaryType: 'Message',
+                    domain: {
+                        name: 'ZilPay MetaMask Test',
+                        version: '1',
+                        chainId: await window.ethereum.request({ method: 'eth_chainId' }),
+                        verifyingContract: '0x0000000000000000000000000000000000000000'
+                    },
+                    message: {
+                        content: 'Hello, typed data!'
+                    }
+                };
+
+                // Оффчейн-проверка подписи (опционально)
+                const result = {
+                    v: parseInt(v),
+                    r: r,
+                    s: s,
+                    typedData: typedData
+                };
+
+                displayResult('Ledger Signature', result);
+
+                // Для ончейн-проверки подписи нужно развернуть контракт (см. ниже)
+            } catch (error) {
+                handleError('displayLedgerSignature', error);
+            }
+        }
+
         async function getTransactionCount() {
             try {
                 if (!await checkMetaMask()) return;
@@ -503,7 +562,7 @@
             try {
                 if (!await checkMetaMask()) return;
                 const networkParams = {
-                    chainId: '0x539', // 1337 in decimal
+                    chainId: '0x539',
                     chainName: 'Local Testnet',
                     nativeCurrency: {
                         name: 'ETH',
@@ -528,7 +587,7 @@
                 if (!await checkMetaMask()) return;
                 await window.ethereum.request({
                     method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: '0x1' }] // Ethereum mainnet
+                    params: [{ chainId: '0x1' }]
                 });
                 displayResult('Switch Network', 'Request to switch to Ethereum mainnet sent successfully');
             } catch (error) {
@@ -546,7 +605,7 @@
                 const tokenParams = {
                     type: 'ERC20',
                     options: {
-                        address: '0x6B175474E89094C44Da98b954EedeAC495271d0F', // DAI address
+                        address: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
                         symbol: 'DAI',
                         decimals: 18,
                         image: 'https://cryptologos.cc/logos/multi-collateral-dai-dai-logo.png'
