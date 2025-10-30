@@ -1,10 +1,20 @@
 import { getFavicon } from './favicon';
 import { getMetaDataFromTags } from './meta';
-import type { ProviderRpcError, RequestPayload, ZilPayProvider, ProviderConnectInfo, ProviderMessage, ZilPayEventData, ZilPayResponseData } from './types';
+import type { ProviderRpcError, RequestPayload, ZilPayProvider, ProviderConnectInfo, ProviderMessage, ZilPayEventData } from './types';
+
+const BEARBY_INJECTED_EVENT = '@/BearBy/injected-script';
+const BEARBY_CONTENT_EVENT = '@/BearBy/content-script';
+
+const MESSAGE_TYPE = {
+  REQUEST: 'BEARBY_REQUEST',
+  RESPONSE: 'BEARBY_RESPONSE',
+  EVENT: 'BEARBY_EVENT',
+} as const;
 
 export class ZilPayProviderImpl implements ZilPayProvider {
   readonly isZilPay: boolean = true;
   readonly isBearby: boolean = true;
+  readonly isMetaMask: boolean = false;
   readonly supportedMethods: Set<string> = new Set([
     'eth_requestAccounts',
     'eth_accounts', 
@@ -39,10 +49,14 @@ export class ZilPayProviderImpl implements ZilPayProvider {
     'eth_decrypt'
   ]);
   #eventListeners: Map<string, Set<(...args: any[]) => void>> = new Map();
+  #isFlutterMode: boolean = typeof window !== 'undefined' && typeof (window as any).flutter_inappwebview !== 'undefined';
 
   constructor() {
     this.#initializeEvents();
     this.#setupFlutterEventHandler();
+    if (!this.#isFlutterMode) {
+      this.#setupDocumentListener();
+    }
   }
 
   #initializeEvents() {
@@ -85,6 +99,25 @@ export class ZilPayProviderImpl implements ZilPayProvider {
     }
   }
 
+  #setupDocumentListener() {
+    if (typeof document === 'undefined') return;
+
+    document.addEventListener(BEARBY_INJECTED_EVENT, (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (!detail) return;
+
+      try {
+        const data = typeof detail === 'string' ? JSON.parse(detail) : detail;
+        
+        if (data.type === MESSAGE_TYPE.EVENT && (window as any).handleZilPayEvent) {
+          (window as any).handleZilPayEvent(data.data);
+        }
+      } catch (error) {
+        console.error('Error parsing BearBy event:', error);
+      }
+    });
+  }
+
   async request(payload: RequestPayload): Promise<unknown> {
     if (!this.supportedMethods.has(payload.method)) {
       return Promise.reject({
@@ -94,13 +127,21 @@ export class ZilPayProviderImpl implements ZilPayProvider {
       } as ProviderRpcError);
     }
 
+    if (this.#isFlutterMode) {
+      return this.#requestFlutter(payload);
+    }
+
+    return this.#requestExtension(payload);
+  }
+
+  #requestFlutter(payload: RequestPayload): Promise<unknown> {
     const icon = getFavicon();
 
     return new Promise((resolve, reject) => {
       const uuid = Math.random().toString(36).substring(2);
       const meta = getMetaDataFromTags();
       const message = {
-        type: 'ZILPAY_REQUEST',
+        type: MESSAGE_TYPE.REQUEST,
         uuid,
         payload,
         icon,
@@ -109,7 +150,7 @@ export class ZilPayProviderImpl implements ZilPayProvider {
 
       if (typeof window === 'undefined' || !window || !(window as any).flutter_inappwebview) {
         reject({
-          message: 'ZilPay channel is not available',
+          message: 'BearBy channel is not available',
           code: 4900,
           data: null,
         } as ProviderRpcError);
@@ -120,7 +161,7 @@ export class ZilPayProviderImpl implements ZilPayProvider {
         let data = event.data;
         if (!data || typeof data !== 'object') return;
       
-        if (data.type === 'ZILPAY_RESPONSE' && data.uuid === uuid) {
+        if (data.type === MESSAGE_TYPE.RESPONSE && data.uuid === uuid) {
           if (data.payload.error) {
             reject({
               message: data.payload.error.message,
@@ -148,6 +189,71 @@ export class ZilPayProviderImpl implements ZilPayProvider {
           });
       } catch (e: unknown) {
         window.removeEventListener('message', responseHandler);
+        reject({
+          message: `Failed to send request: ${(e as Error).message}`,
+          code: 4000,
+          data: e,
+        } as ProviderRpcError);
+      }
+    });
+  }
+
+  #requestExtension(payload: RequestPayload): Promise<unknown> {
+    if (typeof document === 'undefined') {
+      return Promise.reject({
+        message: 'BearBy extension is not available',
+        code: 4900,
+        data: null,
+      } as ProviderRpcError);
+    }
+
+    const icon = getFavicon();
+    const uuid = Math.random().toString(36).substring(2);
+    const meta = getMetaDataFromTags();
+    const message = {
+      type: MESSAGE_TYPE.REQUEST,
+      uuid,
+      payload,
+      icon,
+      from: BEARBY_INJECTED_EVENT,
+      ...meta,
+    };
+
+    return new Promise((resolve, reject) => {
+      const responseHandler = (event: Event) => {
+        const detail = (event as CustomEvent).detail;
+        if (!detail) return;
+
+        try {
+          const data = typeof detail === 'string' ? JSON.parse(detail) : detail;
+          
+          if (data.type === MESSAGE_TYPE.RESPONSE && data.uuid === uuid) {
+            document.removeEventListener(BEARBY_INJECTED_EVENT, responseHandler);
+
+            if (data.payload?.error) {
+              reject({
+                message: data.payload.error.message,
+                code: data.payload.error.code || 4000,
+                data: data.payload.error.data,
+              } as ProviderRpcError);
+            } else {
+              resolve(data.payload?.result);
+            }
+          }
+        } catch (error) {
+          console.error('Error parsing response:', error);
+        }
+      };
+
+      document.addEventListener(BEARBY_INJECTED_EVENT, responseHandler);
+
+      try {
+        const event = new CustomEvent(BEARBY_CONTENT_EVENT, {
+          detail: JSON.stringify(message)
+        });
+        document.dispatchEvent(event);
+      } catch (e: unknown) {
+        document.removeEventListener(BEARBY_INJECTED_EVENT, responseHandler);
         reject({
           message: `Failed to send request: ${(e as Error).message}`,
           code: 4000,

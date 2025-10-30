@@ -27,7 +27,9 @@ export interface EthSubscription extends ProviderMessage {
 }
 
 export interface ZilPayProvider {
-  isZilPay: boolean;
+  readonly isZilPay: boolean;
+  readonly isMetaMask: boolean;
+  readonly isBearby: boolean;
   request(payload: RequestPayload): Promise<any>;
   on(event: 'connect', callback: (info: ProviderConnectInfo) => void): void;
   on(event: 'disconnect', callback: (error: ProviderRpcError) => void): void;

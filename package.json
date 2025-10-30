@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "bun build ./index.ts --outdir ./dist --target browser --format iife --no-minify && bun run test/server.ts",
-    "build": "bun build index.ts --outdir ./dist --target browser --minify --sourcemap=none --format iife"
+    "build": "bun build index.ts --outdir ./dist --target browser --minify --sourcemap=none --format iife",
+    "check": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/bun": "latest"
