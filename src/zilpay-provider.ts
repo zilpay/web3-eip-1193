@@ -107,10 +107,10 @@ export class ZilPayProviderImpl implements ZilPayProvider {
       if (!detail) return;
 
       try {
-        const data = typeof detail === 'string' ? JSON.parse(detail) : detail;
+        const msg = typeof detail === 'string' ? JSON.parse(detail) : detail;
         
-        if (data.type === MESSAGE_TYPE.EVENT && (window as any).handleZilPayEvent) {
-          (window as any).handleZilPayEvent(data.data);
+        if (msg.type === MESSAGE_TYPE.EVENT && (window as any).handleZilPayEvent) {
+          (window as any).handleZilPayEvent(msg.payload);
         }
       } catch (error) {
         console.error('Error parsing BearBy event:', error);
