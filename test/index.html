@@ -1,342 +1,741 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>ZilPay | Introduce</title>
+    <title>ZilPay | EIP-1193 Test Suite</title>
     <link rel="icon" type="image/x-icon" href="https://zilpay.io/favicon/favicon.ico">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="description" content="Test description for ZilPay">
-    <meta name="title" content="ZilPay MetaMask Test">
+    <meta name="title" content="ZilPay EIP-1193 Test Suite">
     <meta name="colors" content='{"primary": "#007bff", "secondary": "#0056b3", "background": "#f0f0f0", "text": "#000000"}'>
-    <!-- <script src="../dist/index.js"></script> -->
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+        body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            background-color: #f0f0f0;
+            padding: 20px;
             overscroll-behavior: none;
         }
         .container {
-            width: 100%;
-            max-width: 480px;
-            padding: 20px;
-            box-sizing: border-box;
+            max-width: 1200px;
+            margin: 0 auto;
             background-color: #fff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            margin-top: 10px;
+        }
+        .status.connected {
+            background-color: #10b981;
+        }
+        .status.disconnected {
+            background-color: #ef4444;
+        }
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+        .section {
+            background-color: #f9fafb;
             border-radius: 10px;
-            margin: 20px 0;
+            padding: 20px;
+        }
+        .section h2 {
+            font-size: 20px;
+            color: #1f2937;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+        .section h3 {
+            font-size: 16px;
+            color: #4b5563;
+            margin: 15px 0 10px;
         }
         button {
             width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            background-color: #007bff;
+            padding: 12px;
+            margin: 8px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 5px;
-            font-size: 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
-            touch-action: manipulation;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            transition: background-color 0.3s ease, transform 0.2s ease;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
         button:hover {
-            background-color: #0056b3;
             transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
-        h1 {
-            font-size: 24px;
-            color: #333;
-            text-align: center;
+        button:active {
+            transform: translateY(0);
         }
-        h2 {
-            margin-top: 30px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
-            font-size: 20px;
-            color: #444;
+        button.secondary {
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
         }
-        #result {
-            width: 100%;
-            padding: 15px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            margin-top: 20px;
-            word-break: break-word;
+        button.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        .result-area {
+            grid-column: 1 / -1;
+            background-color: #1f2937;
+            color: #f9fafb;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
             white-space: pre-wrap;
-            min-height: 100px;
+            word-break: break-all;
+        }
+        .event-log {
+            grid-column: 1 / -1;
+            background-color: #f3f4f6;
+            border-radius: 10px;
+            padding: 20px;
             max-height: 300px;
             overflow-y: auto;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
         }
-        .buttonGroup {
-            margin-bottom: 20px;
+        .event-item {
+            background-color: white;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
-        @media (max-width: 480px) {
-            .container {
-                padding: 10px;
-                margin: 10px;
+        .event-item .timestamp {
+            color: #6b7280;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        .event-item .event-name {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .event-item .event-data {
+            color: #374151;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .clear-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            max-width: 200px;
+            margin: 10px 0;
+        }
+        .info-box {
+            background-color: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 13px;
+            color: #1e40af;
+        }
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            .header h1 {
+                font-size: 24px;
             }
             button {
-                padding: 12px;
-                font-size: 14px;
-            }
-            h1 {
-                font-size: 20px;
-            }
-            h2 {
-                font-size: 18px;
+                padding: 10px;
+                font-size: 13px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>MetaMask Test</h1>
-        
-        <h2>Базовые методы</h2>
-        <div class="buttonGroup">
-            <button onclick="connectWallet()">Connect Wallet</button>
-            <button onclick="getAccounts()">Get Accounts</button>
-            <button onclick="signMessage()">Sign Message</button>
-            <button onclick="checkMetaTags()">Check Meta Tags</button>
+        <div class="header">
+            <h1>🦊 ZilPay EIP-1193 Test Suite</h1>
+            <div class="status" id="status">Not Connected</div>
+            <div style="margin-top: 10px; font-size: 14px;" id="accountInfo"></div>
+            <div style="margin-top: 5px; font-size: 14px;" id="chainInfo"></div>
         </div>
 
-        <h2>Стандартные методы JSON-RPC</h2>
-        <div class="buttonGroup">
-            <button onclick="getBalance()">eth_getBalance</button>
-            <button onclick="getBlockNumber()">eth_blockNumber</button>
-            <button onclick="getNetwork()">net_version</button>
-            <button onclick="getChainId()">eth_chainId</button>
-            <button onclick="estimateGas()">eth_estimateGas</button>
-            <button onclick="getGasPrice()">eth_gasPrice</button>
-            <button onclick="signTransaction()">eth_sign</button>
-            <button onclick="sendTransaction()">eth_sendTransaction</button>
-            <button onclick="signTypedData()">eth_signTypedData_v4</button>
-            <button onclick="displayLedgerSignature()">Display Ledger Signature</button> <!-- Новая кнопка -->
-            <button onclick="getTransactionCount()">eth_getTransactionCount</button>
-            <button onclick="getBlockByNumber()">eth_getBlockByNumber</button>
-        </div>
+        <div class="content">
+            <!-- Connection & Events -->
+            <div class="section">
+                <h2>🔌 Connection & Events</h2>
+                <button onclick="connectWallet()">Connect Wallet</button>
+                <button onclick="disconnect()">Disconnect</button>
+                <button onclick="getAccounts()">Get Accounts</button>
+                <button onclick="setupEventListeners()" class="success">Setup Event Listeners</button>
+                <div class="info-box" id="eventStatus">Event listeners: Not active</div>
+            </div>
 
-        <h2>Дополнительные методы MetaMask</h2>
-        <div class="buttonGroup">
-            <button onclick="addNetwork()">wallet_addEthereumChain</button>
-            <button onclick="switchNetwork()">wallet_switchEthereumChain</button>
-            <button onclick="watchAsset()">wallet_watchAsset</button>
-            <button onclick="getPermissions()">wallet_getPermissions</button>
-            <button onclick="requestPermissions()">wallet_requestPermissions</button>
-            <button onclick="scanQRCode()">wallet_scanQRCode</button>
-            <button onclick="getEncryptionPublicKey()">eth_getEncryptionPublicKey</button>
-            <button onclick="decrypt()">eth_decrypt</button>
-        </div>
+            <!-- Chain Methods -->
+            <div class="section">
+                <h2>⛓️ Chain Methods</h2>
+                <button onclick="getChainId()">eth_chainId</button>
+                <button onclick="getBlockNumber()">eth_blockNumber</button>
+                <button onclick="getNetwork()">net_version</button>
+                <button onclick="switchToMainnet()">Switch to Ethereum</button>
+                <button onclick="switchToPolygon()">Switch to Polygon</button>
+                <button onclick="switchToBSC()">Switch to BSC</button>
+            </div>
 
-        <div id="result">Результат появится здесь</div>
+            <!-- Account Methods -->
+            <div class="section">
+                <h2>👤 Account Methods</h2>
+                <button onclick="getBalance()">eth_getBalance</button>
+                <button onclick="getTransactionCount()">eth_getTransactionCount</button>
+                <button onclick="getPermissions()">wallet_getPermissions</button>
+                <button onclick="requestPermissions()">wallet_requestPermissions</button>
+            </div>
+
+            <!-- Signing Methods -->
+            <div class="section">
+                <h2>✍️ Signing Methods</h2>
+                <button onclick="signMessage()">personal_sign</button>
+                <button onclick="signTransaction()">eth_sign</button>
+                <button onclick="signTypedData()">eth_signTypedData_v4</button>
+            </div>
+
+            <!-- Transaction Methods -->
+            <div class="section">
+                <h2>💸 Transaction Methods</h2>
+                <button onclick="sendTransaction()">eth_sendTransaction</button>
+                <button onclick="estimateGas()">eth_estimateGas</button>
+                <button onclick="getGasPrice()">eth_gasPrice</button>
+                <button onclick="getBlockByNumber()">eth_getBlockByNumber</button>
+            </div>
+
+            <!-- Network Management -->
+            <div class="section">
+                <h2>🌐 Network Management</h2>
+                <button onclick="addCustomNetwork()">wallet_addEthereumChain</button>
+                <button onclick="addLocalNetwork()">Add Local Network</button>
+                <button onclick="watchAsset()">wallet_watchAsset (DAI)</button>
+            </div>
+
+            <!-- Advanced Methods -->
+            <div class="section">
+                <h2>🔬 Advanced Methods</h2>
+                <button onclick="ethCall()">eth_call</button>
+                <button onclick="getCode()">eth_getCode</button>
+                <button onclick="getStorageAt()">eth_getStorageAt</button>
+                <button onclick="getLogs()">eth_getLogs</button>
+            </div>
+
+            <!-- Batch Requests -->
+            <div class="section">
+                <h2>📦 Batch & Special</h2>
+                <button onclick="batchRequest()">Batch Request Test</button>
+                <button onclick="testAllMethods()">Test All Methods</button>
+                <button onclick="stressTest()">Stress Test (10 requests)</button>
+                <button onclick="checkMetaTags()">Check Meta Tags</button>
+            </div>
+
+            <!-- Event Log -->
+            <div class="event-log">
+                <h2>📋 Event Log</h2>
+                <button class="clear-btn" onclick="clearEventLog()">Clear Log</button>
+                <div id="eventLog"></div>
+            </div>
+
+            <!-- Result Area -->
+            <div class="result-area" id="result">
+                <div style="color: #10b981;">✓ Ready to test</div>
+                <div style="margin-top: 10px; color: #9ca3af;">Results will appear here...</div>
+            </div>
+        </div>
     </div>
 
     <script>
         const resultDiv = document.getElementById('result');
+        const eventLogDiv = document.getElementById('eventLog');
+        const statusDiv = document.getElementById('status');
+        const accountInfo = document.getElementById('accountInfo');
+        const chainInfo = document.getElementById('chainInfo');
+        const eventStatus = document.getElementById('eventStatus');
+        
+        let eventListenersActive = false;
+        let currentAccount = null;
+        let currentChainId = null;
 
-        function displayResult(title, data) {
-            try {
-                if (typeof data === 'object') {
-                    resultDiv.textContent = `${title}:\n${JSON.stringify(data, null, 2)}`;
-                } else {
-                    resultDiv.textContent = `${title}: ${data}`;
-                }
-            } catch (error) {
-                resultDiv.textContent = `${title}: ${data}`;
+        // Utility Functions
+        function log(title, data, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            let output = `[${timestamp}] ${title}\n`;
+            
+            if (typeof data === 'object') {
+                output += JSON.stringify(data, null, 2);
+            } else {
+                output += String(data);
+            }
+            
+            resultDiv.textContent = output;
+            
+            if (type === 'error') {
+                resultDiv.style.color = '#ef4444';
+            } else if (type === 'success') {
+                resultDiv.style.color = '#10b981';
+            } else {
+                resultDiv.style.color = '#f9fafb';
             }
         }
 
-        function handleError(method, error) {
-            resultDiv.textContent = `Error (${method}): ${error.message || error}`;
-            console.error(error);
+        function logEvent(eventName, data) {
+            const timestamp = new Date().toLocaleTimeString();
+            const eventItem = document.createElement('div');
+            eventItem.className = 'event-item';
+            eventItem.innerHTML = `
+                <div class="timestamp">${timestamp}</div>
+                <div class="event-name">📡 ${eventName}</div>
+                <div class="event-data">${JSON.stringify(data, null, 2)}</div>
+            `;
+            eventLogDiv.insertBefore(eventItem, eventLogDiv.firstChild);
+            
+            // Keep only last 20 events
+            while (eventLogDiv.children.length > 20) {
+                eventLogDiv.removeChild(eventLogDiv.lastChild);
+            }
         }
 
-        async function checkMetaMask() {
+        function clearEventLog() {
+            eventLogDiv.innerHTML = '';
+            log('Event log cleared', 'All events removed', 'success');
+        }
+
+        function updateStatus() {
+            if (currentAccount) {
+                statusDiv.textContent = '🟢 Connected';
+                statusDiv.className = 'status connected';
+                accountInfo.textContent = `Account: ${currentAccount.slice(0, 6)}...${currentAccount.slice(-4)}`;
+            } else {
+                statusDiv.textContent = '🔴 Not Connected';
+                statusDiv.className = 'status disconnected';
+                accountInfo.textContent = '';
+            }
+            
+            if (currentChainId) {
+                const chainName = getChainName(parseInt(currentChainId, 16));
+                chainInfo.textContent = `Chain: ${chainName} (${currentChainId})`;
+            }
+        }
+
+        function getChainName(chainId) {
+            const chains = {
+                1: 'Ethereum Mainnet',
+                5: 'Goerli',
+                11155111: 'Sepolia',
+                137: 'Polygon',
+                80001: 'Mumbai',
+                56: 'BSC',
+                97: 'BSC Testnet',
+                42161: 'Arbitrum One',
+                421614: 'Arbitrum Sepolia',
+                10: 'Optimism',
+                43114: 'Avalanche',
+                250: 'Fantom',
+                25: 'Cronos',
+            };
+            return chains[chainId] || `Unknown (${chainId})`;
+        }
+
+        async function checkProvider() {
             if (!window.ethereum) {
-                displayResult('Error', 'MetaMask not found');
+                log('Error', 'Ethereum provider not found. Please install ZilPay or MetaMask.', 'error');
                 return false;
             }
             return true;
         }
 
-        // Базовые методы
+        // Event Listeners
+        function setupEventListeners() {
+            if (!window.ethereum) {
+                log('Error', 'Provider not found', 'error');
+                return;
+            }
+
+            if (eventListenersActive) {
+                log('Info', 'Event listeners already active', 'info');
+                return;
+            }
+
+            // chainChanged
+            window.ethereum.on('chainChanged', (chainId) => {
+                logEvent('chainChanged', { chainId, decimal: parseInt(chainId, 16) });
+                currentChainId = chainId;
+                updateStatus();
+            });
+
+            // accountsChanged
+            window.ethereum.on('accountsChanged', (accounts) => {
+                logEvent('accountsChanged', accounts);
+                currentAccount = accounts[0] || null;
+                updateStatus();
+            });
+
+            // connect
+            window.ethereum.on('connect', (connectInfo) => {
+                logEvent('connect', connectInfo);
+                currentChainId = connectInfo.chainId;
+                updateStatus();
+            });
+
+            // disconnect
+            window.ethereum.on('disconnect', (error) => {
+                logEvent('disconnect', error);
+                currentAccount = null;
+                updateStatus();
+            });
+
+            // message
+            window.ethereum.on('message', (message) => {
+                logEvent('message', message);
+            });
+
+            eventListenersActive = true;
+            eventStatus.textContent = '✅ Event listeners: Active';
+            eventStatus.style.backgroundColor = '#d1fae5';
+            eventStatus.style.borderColor = '#10b981';
+            log('Event Listeners', 'All EIP-1193 event listeners are now active', 'success');
+        }
+
+        // Connection Methods
         async function connectWallet() {
             try {
-                if (!await checkMetaMask()) return;
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                displayResult('Connected Accounts', accounts);
+                if (!await checkProvider()) return;
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+                currentAccount = accounts[0];
+                currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+                updateStatus();
+                log('Connected', { accounts, chainId: currentChainId }, 'success');
             } catch (error) {
-                handleError('connectWallet', error);
+                log('Error: connectWallet', error.message, 'error');
             }
+        }
+
+        async function disconnect() {
+            currentAccount = null;
+            updateStatus();
+            log('Disconnected', 'Wallet disconnected', 'success');
         }
 
         async function getAccounts() {
             try {
-                if (!await checkMetaMask()) return;
+                if (!await checkProvider()) return;
                 const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-                displayResult('Accounts', accounts);
+                currentAccount = accounts[0] || null;
+                updateStatus();
+                log('eth_accounts', accounts, 'success');
             } catch (error) {
-                handleError('getAccounts', error);
+                log('Error: getAccounts', error.message, 'error');
             }
         }
 
-        async function signMessage() {
+        // Chain Methods
+        async function getChainId() {
             try {
-                if (!await checkMetaMask()) return;
-                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-                if (accounts.length === 0) {
-                    displayResult('Error', 'No accounts found. Connect MetaMask first.');
-                    return;
-                }
-                const account = accounts[0];
-                const message = 'Hello, MetaMask!';
-                const signature = await window.ethereum.request({
-                    method: 'personal_sign',
-                    params: [message, account]
-                });
-                displayResult('Signature', signature);
+                if (!await checkProvider()) return;
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                currentChainId = chainId;
+                updateStatus();
+                log('eth_chainId', {
+                    hex: chainId,
+                    decimal: parseInt(chainId, 16),
+                    name: getChainName(parseInt(chainId, 16))
+                }, 'success');
             } catch (error) {
-                handleError('signMessage', error);
+                log('Error: getChainId', error.message, 'error');
             }
         }
 
-        function checkMetaTags() {
-            const metaTags = document.getElementsByTagName('meta');
-            let description = null;
-            let title = null;
-            let colors = null;
+        async function getBlockNumber() {
+            try {
+                if (!await checkProvider()) return;
+                const blockNumber = await window.ethereum.request({ 
+                    method: 'eth_blockNumber' 
+                });
+                log('eth_blockNumber', {
+                    hex: blockNumber,
+                    decimal: parseInt(blockNumber, 16)
+                }, 'success');
+            } catch (error) {
+                log('Error: getBlockNumber', error.message, 'error');
+            }
+        }
 
-            for (let i = 0; i < metaTags.length; i++) {
-                const meta = metaTags[i];
-                const name = meta.getAttribute('name');
-                const content = meta.getAttribute('content');
+        async function getNetwork() {
+            try {
+                if (!await checkProvider()) return;
+                const networkId = await window.ethereum.request({ method: 'net_version' });
+                log('net_version', { 
+                    networkId,
+                    name: getChainName(parseInt(networkId))
+                }, 'success');
+            } catch (error) {
+                log('Error: getNetwork', error.message, 'error');
+            }
+        }
 
-                if (!name || !content) continue;
+        async function switchToMainnet() {
+            await switchNetwork('0x1', 'Ethereum Mainnet');
+        }
 
-                switch (name.toLowerCase()) {
-                    case 'description':
-                        description = content;
-                        break;
-                    case 'title':
-                        title = content;
-                        break;
-                    case 'colors':
-                        try {
-                            colors = JSON.parse(content);
-                        } catch (e) {
-                            console.warn('Failed to parse colors: ' + e);
-                            colors = null;
-                        }
-                        break;
+        async function switchToPolygon() {
+            await switchNetwork('0x89', 'Polygon');
+        }
+
+        async function switchToBSC() {
+            await switchNetwork('0x38', 'BSC');
+        }
+
+        async function switchNetwork(chainId, name) {
+            try {
+                if (!await checkProvider()) return;
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId }]
+                });
+                log('wallet_switchEthereumChain', `Switched to ${name} (${chainId})`, 'success');
+            } catch (error) {
+                if (error.code === 4902) {
+                    log('Error', `${name} not found. Try adding it first.`, 'error');
+                } else {
+                    log('Error: switchNetwork', error.message, 'error');
                 }
             }
-
-            const result = {
-                description: description,
-                title: title,
-                colors: colors
-            };
-            displayResult('Meta Tags', result);
         }
 
-        // Стандартные методы JSON-RPC
+        // Account Methods
         async function getBalance() {
             try {
-                if (!await checkMetaMask()) return;
+                if (!await checkProvider()) return;
                 const accounts = await window.ethereum.request({ method: 'eth_accounts' });
                 if (accounts.length === 0) {
-                    displayResult('Error', 'No accounts found. Connect MetaMask first.');
+                    log('Error', 'No accounts. Connect wallet first.', 'error');
                     return;
                 }
                 const balance = await window.ethereum.request({
                     method: 'eth_getBalance',
                     params: [accounts[0], 'latest']
                 });
-                const etherValue = parseInt(balance, 16) / 1e18;
-                displayResult('Account Balance', {
+                log('eth_getBalance', {
+                    account: accounts[0],
                     wei: balance,
-                    ether: etherValue.toFixed(6)
-                });
+                    ether: (parseInt(balance, 16) / 1e18).toFixed(6)
+                }, 'success');
             } catch (error) {
-                handleError('getBalance', error);
+                log('Error: getBalance', error.message, 'error');
             }
         }
 
-        async function getBlockNumber() {
+        async function getTransactionCount() {
             try {
-                if (!await checkMetaMask()) return;
-                const blockNumber = await window.ethereum.request({
-                    method: 'eth_blockNumber',
-                    params: []
-                });
-                displayResult('Current Block Number', {
-                    hex: blockNumber,
-                    decimal: parseInt(blockNumber, 16)
-                });
-            } catch (error) {
-                handleError('getBlockNumber', error);
-            }
-        }
-
-        async function getNetwork() {
-            try {
-                if (!await checkMetaMask()) return;
-                const networkId = await window.ethereum.request({
-                    method: 'net_version',
-                    params: []
-                });
-                let networkName = 'Unknown';
-                switch (networkId) {
-                    case '1': networkName = 'Ethereum Mainnet'; break;
-                    case '5': networkName = 'Goerli Testnet'; break;
-                    case '11155111': networkName = 'Sepolia Testnet'; break;
-                    case '137': networkName = 'Polygon Mainnet'; break;
-                    case '80001': networkName = 'Mumbai Testnet'; break;
-                    case '42161': networkName = 'Arbitrum One'; break;
-                    case '10': networkName = 'Optimism'; break;
-                    case '56': networkName = 'BNB Smart Chain'; break;
-                    case '43114': networkName = 'Avalanche C-Chain'; break;
+                if (!await checkProvider()) return;
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length === 0) {
+                    log('Error', 'No accounts. Connect wallet first.', 'error');
+                    return;
                 }
-                displayResult('Network', {
-                    id: networkId,
-                    name: networkName
+                const txCount = await window.ethereum.request({
+                    method: 'eth_getTransactionCount',
+                    params: [accounts[0], 'latest']
                 });
+                log('eth_getTransactionCount', {
+                    account: accounts[0],
+                    nonce: parseInt(txCount, 16)
+                }, 'success');
             } catch (error) {
-                handleError('getNetwork', error);
+                log('Error: getTransactionCount', error.message, 'error');
             }
         }
 
-        async function getChainId() {
+        async function getPermissions() {
             try {
-                if (!await checkMetaMask()) return;
-                const chainId = await window.ethereum.request({
-                    method: 'eth_chainId',
-                    params: []
+                if (!await checkProvider()) return;
+                const permissions = await window.ethereum.request({
+                    method: 'wallet_getPermissions'
                 });
-                displayResult('Chain ID', {
-                    hex: chainId,
-                    decimal: parseInt(chainId, 16)
-                });
+                log('wallet_getPermissions', permissions, 'success');
             } catch (error) {
-                handleError('getChainId', error);
+                log('Error: getPermissions', error.message, 'error');
+            }
+        }
+
+        async function requestPermissions() {
+            try {
+                if (!await checkProvider()) return;
+                const permissions = await window.ethereum.request({
+                    method: 'wallet_requestPermissions',
+                    params: [{ eth_accounts: {} }]
+                });
+                log('wallet_requestPermissions', permissions, 'success');
+            } catch (error) {
+                log('Error: requestPermissions', error.message, 'error');
+            }
+        }
+
+        // Signing Methods
+        async function signMessage() {
+            try {
+                if (!await checkProvider()) return;
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length === 0) {
+                    log('Error', 'No accounts. Connect wallet first.', 'error');
+                    return;
+                }
+                const message = 'Hello from ZilPay Test Suite! 👋';
+                const signature = await window.ethereum.request({
+                    method: 'personal_sign',
+                    params: [message, accounts[0]]
+                });
+                log('personal_sign', {
+                    message,
+                    account: accounts[0],
+                    signature
+                }, 'success');
+            } catch (error) {
+                log('Error: signMessage', error.message, 'error');
+            }
+        }
+
+        async function signTransaction() {
+            try {
+                if (!await checkProvider()) return;
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length === 0) {
+                    log('Error', 'No accounts. Connect wallet first.', 'error');
+                    return;
+                }
+                const message = '0x48656c6c6f20576f726c6421'; // "Hello World!" in hex
+                const signature = await window.ethereum.request({
+                    method: 'eth_sign',
+                    params: [accounts[0], message]
+                });
+                log('eth_sign', { message, signature }, 'success');
+            } catch (error) {
+                log('Error: signTransaction', error.message, 'error');
+            }
+        }
+
+        async function signTypedData() {
+            try {
+                if (!await checkProvider()) return;
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length === 0) {
+                    log('Error', 'No accounts. Connect wallet first.', 'error');
+                    return;
+                }
+                
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                const typedData = {
+                    types: {
+                        EIP712Domain: [
+                            { name: 'name', type: 'string' },
+                            { name: 'version', type: 'string' },
+                            { name: 'chainId', type: 'uint256' },
+                            { name: 'verifyingContract', type: 'address' }
+                        ],
+                        Person: [
+                            { name: 'name', type: 'string' },
+                            { name: 'wallet', type: 'address' }
+                        ],
+                        Mail: [
+                            { name: 'from', type: 'Person' },
+                            { name: 'to', type: 'Person' },
+                            { name: 'contents', type: 'string' }
+                        ]
+                    },
+                    primaryType: 'Mail',
+                    domain: {
+                        name: 'ZilPay Test',
+                        version: '1',
+                        chainId: parseInt(chainId, 16),
+                        verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC'
+                    },
+                    message: {
+                        from: {
+                            name: 'Alice',
+                            wallet: '0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826'
+                        },
+                        to: {
+                            name: 'Bob',
+                            wallet: accounts[0]
+                        },
+                        contents: 'Hello Bob! This is a test message from ZilPay.'
+                    }
+                };
+                
+                const signature = await window.ethereum.request({
+                    method: 'eth_signTypedData_v4',
+                    params: [accounts[0], JSON.stringify(typedData)]
+                });
+                log('eth_signTypedData_v4', { signature }, 'success');
+            } catch (error) {
+                log('Error: signTypedData', error.message, 'error');
+            }
+        }
+
+        // Transaction Methods
+        async function sendTransaction() {
+            try {
+                if (!await checkProvider()) return;
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length === 0) {
+                    log('Error', 'No accounts. Connect wallet first.', 'error');
+                    return;
+                }
+                const transactionParameters = {
+                    from: accounts[0],
+                    to: accounts[0],
+                    value: '0x0',
+                    data: '0x'
+                };
+                const txHash = await window.ethereum.request({
+                    method: 'eth_sendTransaction',
+                    params: [transactionParameters]
+                });
+                log('eth_sendTransaction', { txHash }, 'success');
+            } catch (error) {
+                log('Error: sendTransaction', error.message, 'error');
             }
         }
 
         async function estimateGas() {
             try {
-                if (!await checkMetaMask()) return;
+                if (!await checkProvider()) return;
                 const accounts = await window.ethereum.request({ method: 'eth_accounts' });
                 if (accounts.length === 0) {
-                    displayResult('Error', 'No accounts found. Connect MetaMask first.');
+                    log('Error', 'No accounts. Connect wallet first.', 'error');
                     return;
                 }
                 const gasEstimate = await window.ethereum.request({
@@ -347,262 +746,94 @@
                         value: '0x0'
                     }]
                 });
-                displayResult('Gas Estimate', {
+                log('eth_estimateGas', {
                     hex: gasEstimate,
                     decimal: parseInt(gasEstimate, 16)
-                });
+                }, 'success');
             } catch (error) {
-                handleError('estimateGas', error);
+                log('Error: estimateGas', error.message, 'error');
             }
         }
 
         async function getGasPrice() {
             try {
-                if (!await checkMetaMask()) return;
-                const gasPrice = await window.ethereum.request({
-                    method: 'eth_gasPrice',
-                    params: []
-                });
-                const gweiValue = parseInt(gasPrice, 16) / 1e9;
-                displayResult('Gas Price', {
+                if (!await checkProvider()) return;
+                const gasPrice = await window.ethereum.request({ method: 'eth_gasPrice' });
+                log('eth_gasPrice', {
                     wei: gasPrice,
-                    gwei: gweiValue.toFixed(2)
-                });
+                    gwei: (parseInt(gasPrice, 16) / 1e9).toFixed(2)
+                }, 'success');
             } catch (error) {
-                handleError('getGasPrice', error);
-            }
-        }
-
-        async function signTransaction() {
-            try {
-                if (!await checkMetaMask()) return;
-                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-                if (accounts.length === 0) {
-                    displayResult('Error', 'No accounts found. Connect MetaMask first.');
-                    return;
-                }
-                const account = accounts[0];
-                const message = '0x48656c6c6f2c204d6574614d61736b21'; // "Hello, MetaMask!" в hex
-                const signature = await window.ethereum.request({
-                    method: 'eth_sign',
-                    params: [account, message]
-                });
-                displayResult('Signature', signature);
-            } catch (error) {
-                handleError('signTransaction', error);
-            }
-        }
-
-        async function sendTransaction() {
-            try {
-                if (!await checkMetaMask()) return;
-                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-                if (accounts.length === 0) {
-                    displayResult('Error', 'No accounts found. Connect MetaMask first.');
-                    return;
-                }
-                const transactionParameters = {
-                    from: accounts[0],
-                    to: accounts[0],
-                    value: '0x0',
-                    gas: '0x5208',
-                    data: '0x'
-                };
-                const txHash = await window.ethereum.request({
-                    method: 'eth_sendTransaction',
-                    params: [transactionParameters]
-                });
-                displayResult('Transaction Hash', txHash);
-            } catch (error) {
-                handleError('sendTransaction', error);
-            }
-        }
-
-        async function signTypedData() {
-            try {
-                if (!await checkMetaMask()) return;
-                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-                if (accounts.length === 0) {
-                    displayResult('Error', 'No accounts found. Connect MetaMask first.');
-                    return;
-                }
-                const account = accounts[0];
-                
-                const typedData = {
-                    types: {
-                        EIP712Domain: [
-                            { name: 'name', type: 'string' },
-                            { name: 'version', type: 'string' },
-                            { name: 'chainId', type: 'uint256' },
-                            { name: 'verifyingContract', type: 'address' }
-                        ],
-                        Message: [
-                            { name: 'content', type: 'string' }
-                        ]
-                    },
-                    primaryType: 'Message',
-                    domain: {
-                        name: 'ZilPay MetaMask Test',
-                        version: '1',
-                        chainId: await window.ethereum.request({ method: 'eth_chainId' }),
-                        verifyingContract: '0x0000000000000000000000000000000000000000'
-                    },
-                    message: {
-                        content: 'Hello, typed data!'
-                    }
-                };
-                
-                const signature = await window.ethereum.request({
-                    method: 'eth_signTypedData_v4',
-                    params: [account, JSON.stringify(typedData)]
-                });
-                displayResult('Typed Data Signature', signature);
-            } catch (error) {
-                handleError('signTypedData', error);
-            }
-        }
-
-        async function displayLedgerSignature() {
-            try {
-                // Здесь предполагается, что подпись получена из Flutter
-                // Для теста вы можете вставить подпись вручную
-                const ledgerSignature = prompt("Введите подпись от Ledger (формат: v,r,s)", "27,0x123...,0x456...");
-                if (!ledgerSignature) {
-                    displayResult('Error', 'No signature provided');
-                    return;
-                }
-
-                // Разбираем подпись
-                const [v, r, s] = ledgerSignature.split(',');
-                if (!v || !r || !s) {
-                    displayResult('Error', 'Invalid signature format. Expected: v,r,s');
-                    return;
-                }
-
-                // Формируем TypedData для проверки
-                const typedData = {
-                    types: {
-                        EIP712Domain: [
-                            { name: 'name', type: 'string' },
-                            { name: 'version', type: 'string' },
-                            { name: 'chainId', type: 'uint256' },
-                            { name: 'verifyingContract', type: 'address' }
-                        ],
-                        Message: [
-                            { name: 'content', type: 'string' }
-                        ]
-                    },
-                    primaryType: 'Message',
-                    domain: {
-                        name: 'ZilPay MetaMask Test',
-                        version: '1',
-                        chainId: await window.ethereum.request({ method: 'eth_chainId' }),
-                        verifyingContract: '0x0000000000000000000000000000000000000000'
-                    },
-                    message: {
-                        content: 'Hello, typed data!'
-                    }
-                };
-
-                // Оффчейн-проверка подписи (опционально)
-                const result = {
-                    v: parseInt(v),
-                    r: r,
-                    s: s,
-                    typedData: typedData
-                };
-
-                displayResult('Ledger Signature', result);
-
-                // Для ончейн-проверки подписи нужно развернуть контракт (см. ниже)
-            } catch (error) {
-                handleError('displayLedgerSignature', error);
-            }
-        }
-
-        async function getTransactionCount() {
-            try {
-                if (!await checkMetaMask()) return;
-                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-                if (accounts.length === 0) {
-                    displayResult('Error', 'No accounts found. Connect MetaMask first.');
-                    return;
-                }
-                const txCount = await window.ethereum.request({
-                    method: 'eth_getTransactionCount',
-                    params: [accounts[0], 'latest']
-                });
-                displayResult('Transaction Count (Nonce)', {
-                    hex: txCount,
-                    decimal: parseInt(txCount, 16)
-                });
-            } catch (error) {
-                handleError('getTransactionCount', error);
+                log('Error: getGasPrice', error.message, 'error');
             }
         }
 
         async function getBlockByNumber() {
             try {
-                if (!await checkMetaMask()) return;
-                const blockNumber = await window.ethereum.request({
-                    method: 'eth_blockNumber',
-                    params: []
-                });
+                if (!await checkProvider()) return;
+                const blockNumber = await window.ethereum.request({ method: 'eth_blockNumber' });
                 const block = await window.ethereum.request({
                     method: 'eth_getBlockByNumber',
                     params: [blockNumber, false]
                 });
-                displayResult('Latest Block Info', block);
+                log('eth_getBlockByNumber', block, 'success');
             } catch (error) {
-                handleError('getBlockByNumber', error);
+                log('Error: getBlockByNumber', error.message, 'error');
             }
         }
 
-        // Дополнительные методы MetaMask
-        async function addNetwork() {
+        // Network Management
+        async function addCustomNetwork() {
             try {
-                if (!await checkMetaMask()) return;
+                if (!await checkProvider()) return;
                 const networkParams = {
-                    chainId: '0x539',
-                    chainName: 'Local Testnet',
+                    chainId: '0xa4b1',
+                    chainName: 'Arbitrum One',
                     nativeCurrency: {
-                        name: 'ETH',
+                        name: 'Ether',
                         symbol: 'ETH',
                         decimals: 18
                     },
-                    rpcUrls: ['http://localhost:8545'],
-                    blockExplorerUrls: ['']
+                    rpcUrls: ['https://arb1.arbitrum.io/rpc'],
+                    blockExplorerUrls: ['https://arbiscan.io']
                 };
                 await window.ethereum.request({
                     method: 'wallet_addEthereumChain',
                     params: [networkParams]
                 });
-                displayResult('Add Network', 'Request to add network sent successfully');
+                log('wallet_addEthereumChain', 'Arbitrum One added', 'success');
             } catch (error) {
-                handleError('addNetwork', error);
+                log('Error: addCustomNetwork', error.message, 'error');
             }
         }
 
-        async function switchNetwork() {
+        async function addLocalNetwork() {
             try {
-                if (!await checkMetaMask()) return;
+                if (!await checkProvider()) return;
+                const networkParams = {
+                    chainId: '0x539',
+                    chainName: 'Localhost 8545',
+                    nativeCurrency: {
+                        name: 'Ether',
+                        symbol: 'ETH',
+                        decimals: 18
+                    },
+                    rpcUrls: ['http://localhost:8545'],
+                    blockExplorerUrls: []
+                };
                 await window.ethereum.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: '0x1' }]
+                    method: 'wallet_addEthereumChain',
+                    params: [networkParams]
                 });
-                displayResult('Switch Network', 'Request to switch to Ethereum mainnet sent successfully');
+                log('wallet_addEthereumChain', 'Localhost added', 'success');
             } catch (error) {
-                if (error.code === 4902) {
-                    displayResult('Switch Network', 'Network not found. Try adding it first with wallet_addEthereumChain');
-                } else {
-                    handleError('switchNetwork', error);
-                }
+                log('Error: addLocalNetwork', error.message, 'error');
             }
         }
 
         async function watchAsset() {
             try {
-                if (!await checkMetaMask()) return;
+                if (!await checkProvider()) return;
                 const tokenParams = {
                     type: 'ERC20',
                     options: {
@@ -616,99 +847,210 @@
                     method: 'wallet_watchAsset',
                     params: tokenParams
                 });
-                if (success) {
-                    displayResult('Watch Asset', 'Token successfully added to wallet');
-                } else {
-                    displayResult('Watch Asset', 'User rejected the request');
+                log('wallet_watchAsset', { success }, success ? 'success' : 'error');
+            } catch (error) {
+                log('Error: watchAsset', error.message, 'error');
+            }
+        }
+
+        // Advanced Methods
+        async function ethCall() {
+            try {
+                if (!await checkProvider()) return;
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length === 0) {
+                    log('Error', 'No accounts. Connect wallet first.', 'error');
+                    return;
                 }
-            } catch (error) {
-                handleError('watchAsset', error);
-            }
-        }
-
-        async function getPermissions() {
-            try {
-                if (!await checkMetaMask()) return;
-                const permissions = await window.ethereum.request({
-                    method: 'wallet_getPermissions',
-                    params: []
-                });
-                displayResult('Current Permissions', permissions);
-            } catch (error) {
-                handleError('getPermissions', error);
-            }
-        }
-
-        async function requestPermissions() {
-            try {
-                if (!await checkMetaMask()) return;
-                const permissions = await window.ethereum.request({
-                    method: 'wallet_requestPermissions',
+                const result = await window.ethereum.request({
+                    method: 'eth_call',
                     params: [{
-                        eth_accounts: {}
+                        from: accounts[0],
+                        to: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
+                        data: '0x18160ddd' // totalSupply() for ERC20
+                    }, 'latest']
+                });
+                log('eth_call', { result }, 'success');
+            } catch (error) {
+                log('Error: ethCall', error.message, 'error');
+            }
+        }
+
+        async function getCode() {
+            try {
+                if (!await checkProvider()) return;
+                const code = await window.ethereum.request({
+                    method: 'eth_getCode',
+                    params: ['0x6B175474E89094C44Da98b954EedeAC495271d0F', 'latest']
+                });
+                log('eth_getCode', {
+                    address: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
+                    codeLength: code.length,
+                    codePreview: code.slice(0, 100) + '...'
+                }, 'success');
+            } catch (error) {
+                log('Error: getCode', error.message, 'error');
+            }
+        }
+
+        async function getStorageAt() {
+            try {
+                if (!await checkProvider()) return;
+                const storage = await window.ethereum.request({
+                    method: 'eth_getStorageAt',
+                    params: ['0x6B175474E89094C44Da98b954EedeAC495271d0F', '0x0', 'latest']
+                });
+                log('eth_getStorageAt', { storage }, 'success');
+            } catch (error) {
+                log('Error: getStorageAt', error.message, 'error');
+            }
+        }
+
+        async function getLogs() {
+            try {
+                if (!await checkProvider()) return;
+                const blockNumber = await window.ethereum.request({ method: 'eth_blockNumber' });
+                const fromBlock = '0x' + (parseInt(blockNumber, 16) - 10).toString(16);
+                const logs = await window.ethereum.request({
+                    method: 'eth_getLogs',
+                    params: [{
+                        fromBlock: fromBlock,
+                        toBlock: blockNumber
                     }]
                 });
-                displayResult('Requested Permissions', permissions);
+                log('eth_getLogs', {
+                    fromBlock,
+                    toBlock: blockNumber,
+                    logsCount: logs.length,
+                    logs: logs.slice(0, 3)
+                }, 'success');
             } catch (error) {
-                handleError('requestPermissions', error);
+                log('Error: getLogs', error.message, 'error');
             }
         }
 
-        async function scanQRCode() {
+        // Batch & Special
+        async function batchRequest() {
             try {
-                if (!await checkMetaMask()) return;
-                const result = await window.ethereum.request({
-                    method: 'wallet_scanQRCode',
-                    params: []
-                });
-                displayResult('QR Code Scan Result', result);
+                if (!await checkProvider()) return;
+                const start = performance.now();
+                const [chainId, blockNumber, gasPrice] = await Promise.all([
+                    window.ethereum.request({ method: 'eth_chainId' }),
+                    window.ethereum.request({ method: 'eth_blockNumber' }),
+                    window.ethereum.request({ method: 'eth_gasPrice' })
+                ]);
+                const duration = (performance.now() - start).toFixed(2);
+                log('Batch Request', {
+                    duration: `${duration}ms`,
+                    chainId,
+                    blockNumber: parseInt(blockNumber, 16),
+                    gasPrice: (parseInt(gasPrice, 16) / 1e9).toFixed(2) + ' gwei'
+                }, 'success');
             } catch (error) {
-                handleError('scanQRCode', error);
+                log('Error: batchRequest', error.message, 'error');
             }
         }
 
-        async function getEncryptionPublicKey() {
-            try {
-                if (!await checkMetaMask()) return;
-                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-                if (accounts.length === 0) {
-                    displayResult('Error', 'No accounts found. Connect MetaMask first.');
-                    return;
-                }
-                const publicKey = await window.ethereum.request({
-                    method: 'eth_getEncryptionPublicKey',
-                    params: [accounts[0]]
-                });
-                displayResult('Encryption Public Key', publicKey);
-            } catch (error) {
-                handleError('getEncryptionPublicKey', error);
-            }
-        }
-
-        async function decrypt() {
-            try {
-                if (!await checkMetaMask()) return;
-                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-                if (accounts.length === 0) {
-                    displayResult('Error', 'No accounts found. Connect MetaMask first.');
-                    return;
-                }
-                
-                const encryptedMessage = '0x7b2276657273696f6e223a227832353531392d7873616c736132302d706f6c7931333035222c226e6f6e6365223a22554335577a336f55334e71337646704c6c7463574d46596a764c534e43447158222c22657068656d5075626c69634b6579223a225249394579764d38346650644c594d326e7342654552566b47714b6f55533359536b46366f62466f757638383d222c2263697068657274657874223a22483032386a6f7663552f56484c507a414d6a77582b445a55326e5879414b574958347971435a4a4d3d227d';
-                
+        async function testAllMethods() {
+            log('Test All Methods', 'Starting comprehensive test...', 'info');
+            const methods = [
+                'eth_chainId',
+                'eth_accounts',
+                'eth_blockNumber',
+                'net_version',
+                'eth_gasPrice'
+            ];
+            
+            let passed = 0;
+            let failed = 0;
+            
+            for (const method of methods) {
                 try {
-                    const decrypted = await window.ethereum.request({
-                        method: 'eth_decrypt',
-                        params: [encryptedMessage, accounts[0]]
-                    });
-                    displayResult('Decrypted Message', decrypted);
-                } catch (e) {
-                    displayResult('Decrypt Error', 'Для тестирования eth_decrypt требуется предварительно зашифрованное сообщение.');
+                    await window.ethereum.request({ method });
+                    passed++;
+                } catch (error) {
+                    failed++;
                 }
+            }
+            
+            log('Test Results', {
+                total: methods.length,
+                passed,
+                failed,
+                methods
+            }, passed === methods.length ? 'success' : 'error');
+        }
+
+        async function stressTest() {
+            try {
+                if (!await checkProvider()) return;
+                log('Stress Test', 'Starting 10 rapid requests...', 'info');
+                const start = performance.now();
+                const requests = [];
+                
+                for (let i = 0; i < 10; i++) {
+                    requests.push(window.ethereum.request({ method: 'eth_chainId' }));
+                }
+                
+                await Promise.all(requests);
+                const duration = (performance.now() - start).toFixed(2);
+                log('Stress Test Complete', {
+                    requests: 10,
+                    duration: `${duration}ms`,
+                    avgPerRequest: `${(parseFloat(duration) / 10).toFixed(2)}ms`
+                }, 'success');
             } catch (error) {
-                handleError('decrypt', error);
+                log('Error: stressTest', error.message, 'error');
             }
         }
+
+        function checkMetaTags() {
+            const metaTags = document.getElementsByTagName('meta');
+            let description = null;
+            let title = null;
+            let colors = null;
+
+            for (let meta of metaTags) {
+                const name = meta.getAttribute('name');
+                const content = meta.getAttribute('content');
+                if (!name || !content) continue;
+
+                switch (name.toLowerCase()) {
+                    case 'description':
+                        description = content;
+                        break;
+                    case 'title':
+                        title = content;
+                        break;
+                    case 'colors':
+                        try {
+                            colors = JSON.parse(content);
+                        } catch (e) {
+                            colors = null;
+                        }
+                        break;
+                }
+            }
+
+            log('Meta Tags', {
+                description,
+                title,
+                colors,
+                documentTitle: document.title
+            }, 'success');
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            log('Ready', 'ZilPay EIP-1193 Test Suite loaded successfully', 'success');
+            if (window.ethereum) {
+                log('Provider Detected', {
+                    isZilPay: window.ethereum.isZilPay || false,
+                    isMetaMask: window.ethereum.isMetaMask || false,
+                    isBearby: window.ethereum.isBearby || false
+                }, 'info');
+            }
+        });
     </script>
     <script src="../dist/index.js"></script>
 </body>
