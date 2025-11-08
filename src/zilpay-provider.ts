@@ -14,7 +14,7 @@ const MESSAGE_TYPE = {
 export class ZilPayProviderImpl implements ZilPayProvider {
   readonly isZilPay: boolean = true;
   readonly isBearby: boolean = true;
-  readonly isMetaMask: boolean = false;
+  readonly isMetaMask: boolean = true;
   readonly supportedMethods: Set<string> = new Set([
     'eth_requestAccounts',
     'eth_accounts', 
