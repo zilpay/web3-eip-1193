@@ -211,6 +211,7 @@
             <!-- Account Methods -->
             <div class="section">
                 <h2>👤 Account Methods</h2>
+                <button onclick="getCoinbase()">eth_coinbase</button>
                 <button onclick="getBalance()">eth_getBalance</button>
                 <button onclick="getTransactionCount()">eth_getTransactionCount</button>
                 <button onclick="getPermissions()">wallet_getPermissions</button>
@@ -536,6 +537,16 @@
         }
 
         // Account Methods
+        async function getCoinbase() {
+            try {
+                if (!await checkProvider()) return;
+                const coinbase = await window.ethereum.request({ method: 'eth_coinbase' });
+                log('eth_coinbase', { coinbase }, 'success');
+            } catch (error) {
+                log('Error: getCoinbase', error.message, 'error');
+            }
+        }
+
         async function getBalance() {
             try {
                 if (!await checkProvider()) return;

@@ -17,7 +17,8 @@ export class ZilPayProviderImpl implements ZilPayProvider {
   readonly isMetaMask: boolean = true;
   readonly supportedMethods: Set<string> = new Set([
     'eth_requestAccounts',
-    'eth_accounts', 
+    'eth_accounts',
+    'eth_coinbase',
     'eth_sendTransaction',
     'eth_getBalance',
     'eth_getTransactionByHash',
